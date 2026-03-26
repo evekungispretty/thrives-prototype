@@ -228,7 +228,7 @@ export function QuizFlow() {
                   </div>
                   <div className="flex flex-col gap-2">
                     <p className="text-xs font-medium text-neutral-500 mb-1">Match</p>
-                    {currentQ.pairs.map((pair, idx) => (
+                    {currentQ.pairs.map((pair) => (
                       <select
                         key={pair.id}
                         value={matchSelections[pair.id] ?? ''}

@@ -26,7 +26,7 @@ export function ModuleOverview() {
   const pct = Math.round((completedLessons / mod.lessons.length) * 100);
 
   // Find the next incomplete lesson
-  const nextLesson = mod.lessons.find((l, idx) => idx >= completedLessons);
+  const nextLesson = mod.lessons.find((_l, idx) => idx >= completedLessons);
 
   return (
     <ParticipantShell>

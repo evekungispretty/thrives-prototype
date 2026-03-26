@@ -85,7 +85,7 @@ export function ParticipantDetail() {
                 return (
                   <>
                     <p className="text-2xl font-bold text-neutral-900 mt-1">{avg}%</p>
-                    <ProgressBar value={avg} size="sm" className="mt-2" color={avg >= 80 ? 'green' : 'amber'} />
+                    <ProgressBar value={avg} size="sm" className="mt-2" color={avg >= 80 ? 'mint' : 'peach'} />
                   </>
                 );
               })()}

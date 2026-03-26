@@ -59,7 +59,7 @@ export function AdminDashboard() {
           value={totalParticipants}
           subtitle={`${activeParticipants} active`}
           icon={<Users size={18} />}
-          color="green"
+          color="mint"
         />
         <StatCard
           label="Completed Program"
@@ -73,14 +73,14 @@ export function AdminDashboard() {
           value={MODULES.filter(m => m.publishState === 'published').length}
           subtitle="1 in draft"
           icon={<BookOpen size={18} />}
-          color="amber"
+          color="yellow"
         />
         <StatCard
           label="Avg. Completion Rate"
           value={`${Math.round(moduleCompletionData.reduce((s,d) => s + d.pct, 0) / moduleCompletionData.length)}%`}
           subtitle="across all modules"
           icon={<TrendingUp size={18} />}
-          color="green"
+          color="mint"
         />
       </div>
 
