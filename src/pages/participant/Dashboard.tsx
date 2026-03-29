@@ -1,6 +1,7 @@
 import { Link } from 'wouter';
 import { ArrowRight, CheckCircle2, Clock, PlayCircle, Star } from 'lucide-react';
 import { ParticipantShell } from '../../components/layout/ParticipantShell';
+import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { ProgressBar, CircleProgress } from '../../components/ui/ProgressBar';
 import { TopicBadge } from '../../components/ui/Badge';
@@ -63,45 +64,44 @@ export function ParticipantDashboard() {
         {/* Continue Learning CTA */}
         <div className="lg:col-span-2 flex flex-col gap-6">
           {inProgressModule && inProgressData ? (
-            <Card className="border-brand-mint bg-gradient-to-br from-brand-mint-pale to-white">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <p className="text-xs font-medium text-brand-navy uppercase tracking-wide">Continue Learning</p>
-                  <h2 className="mt-1 text-lg font-semibold text-neutral-900">{inProgressModule.title}</h2>
-                  <TopicBadge tag={inProgressModule.tag} />
+            <Card className="border-brand-mint bg-white">
+              <p className="text-xs font-medium text-brand-navy uppercase tracking-wide mb-3">Continue Learning</p>
+              <div className="flex gap-4">
+                <div className="w-32 h-28 rounded-lg flex-shrink-0 overflow-hidden bg-neutral-200">
+                  {inProgressModule.thumbnail ? (
+                    <img
+                      src={inProgressModule.thumbnail}
+                      alt={inProgressModule.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full" style={{ background: topicColor(inProgressModule.tag) }} />
+                  )}
                 </div>
-                <div className="flex-shrink-0">
-                  <CircleProgress
-                    value={Math.round((inProgressData.completedLessons / inProgressData.totalLessons) * 100)}
-                    size={56}
-                  />
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-xl font-bold text-neutral-900 mb-1">{inProgressModule.title}</h2>
+                  <p className="text-sm text-neutral-600 mb-3 leading-relaxed">{inProgressModule.description}</p>
+                  <p className="text-xs text-neutral-500 mb-3">
+                    {inProgressData.completedLessons} of {inProgressData.totalLessons} lessons complete
+                  </p>
+                  <Link href={`/participant/modules/${inProgressModule.id}`}>
+                    <Button size="sm">Continue <ArrowRight size={14} /></Button>
+                  </Link>
                 </div>
-              </div>
-              <p className="text-sm text-neutral-600 mb-4 leading-relaxed">{inProgressModule.description}</p>
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-neutral-500">
-                  {inProgressData.completedLessons} of {inProgressData.totalLessons} lessons complete
-                </p>
-                <Link
-                  href={`/participant/modules/${inProgressModule.id}`}
-                  className="inline-flex items-center gap-1.5 bg-brand-navy text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-brand-navy-dark transition-colors"
-                >
-                  Continue <ArrowRight size={14} />
-                </Link>
               </div>
             </Card>
           ) : (
             <Card className="border-brand-mint bg-brand-mint-pale">
               <p className="text-sm font-medium text-brand-navy">Start your first module!</p>
-              <Link href="/participant/modules" className="inline-flex items-center gap-1.5 mt-3 bg-brand-navy text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-brand-navy-dark transition-colors">
-                Browse Modules <ArrowRight size={14} />
+              <Link href="/participant/modules" className="mt-3 inline-block">
+                <Button size="sm">Browse Modules <ArrowRight size={14} /></Button>
               </Link>
             </Card>
           )}
 
           {/* Module overview list */}
-          <Card>
-            <div className="flex items-center justify-between mb-4">
+          <div>
+            <div className="flex items-center justify-between mb-3">
               <h3 className="font-semibold text-neutral-800">Your Modules</h3>
               <Link href="/participant/modules" className="text-sm text-brand-navy hover:text-brand-navy font-medium">
                 View all
@@ -118,27 +118,33 @@ export function ParticipantDashboard() {
                   <Link
                     key={mod.id}
                     href={isLocked ? '#' : `/participant/modules/${mod.id}`}
-                    className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${isLocked ? 'opacity-40 cursor-default' : 'hover:bg-neutral-50'}`}
+                    className={`flex items-center gap-4 p-3 bg-white rounded-xl border border-neutral-100 shadow-sm transition-all ${isLocked ? 'opacity-40 cursor-default' : 'hover:shadow-md hover:border-neutral-200'}`}
                   >
-                    <div
-                      className="w-9 h-9 rounded-lg flex-shrink-0"
-                      style={{ background: topicColor(mod.tag) }}
-                    />
+                    <div className="w-20 h-16 rounded-lg flex-shrink-0 overflow-hidden bg-neutral-100">
+                      {mod.thumbnail ? (
+                        <img
+                          src={mod.thumbnail}
+                          alt={mod.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full" style={{ background: topicColor(mod.tag) }} />
+                      )}
+                    </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-medium text-neutral-800 truncate">{mod.title}</p>
+                      <div className="flex items-center justify-between gap-2 mb-1.5">
+                        <p className="text-sm font-semibold text-neutral-800 truncate">{mod.title}</p>
                         <span className="text-xs text-neutral-400 flex-shrink-0">
                           {prog?.completedLessons ?? 0}/{mod.lessons.length}
                         </span>
                       </div>
-                      <ProgressBar value={pct} size="sm" className="mt-1.5" />
+                      <ProgressBar value={pct} size="sm" color={pct > 0 ? 'mint' : 'navy'} />
                     </div>
-                    {prog?.status === 'completed' && <CheckCircle2 size={16} className="text-brand-navy flex-shrink-0" />}
                   </Link>
                 );
               })}
             </div>
-          </Card>
+          </div>
         </div>
 
         {/* Right column */}

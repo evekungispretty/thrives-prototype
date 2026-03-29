@@ -1,4 +1,36 @@
-import type { User } from '../types';
+import type { User, QuizAttempt } from '../types';
+
+// Demo quiz attempts — tied to DEMO_PARTICIPANT (user-demo)
+export const QUIZ_ATTEMPTS: QuizAttempt[] = [
+  {
+    id: 'attempt-1',
+    userId: 'user-demo',
+    moduleId: 'mod-1',
+    quizId: 'quiz-1',
+    completedAt: '2024-02-14',
+    totalScore: 9,
+    maxScore: 11,
+    passed: true,
+    results: [
+      { questionId: 'q-1-1', answer: 'b', isCorrect: true, score: 1 },
+      {
+        questionId: 'q-1-2',
+        // pipe-separated "pairId:rightText" entries
+        answer: 'p1:Latch covers the areola|p2:Bottle held horizontally|p3:Following baby\'s hunger cues|p4:Around 6 months with readiness signs',
+        isCorrect: true,
+        score: 4,
+      },
+      { questionId: 'q-1-3', answer: 'c', isCorrect: true, score: 1 },
+      {
+        questionId: 'q-1-4',
+        answer: 'Responsive feeding builds trust by responding to hunger cues before a baby cries.',
+        isCorrect: undefined,
+        score: 1,
+      },
+      { questionId: 'q-1-5', answer: ['a', 'b'], isCorrect: false, score: 2 },
+    ],
+  },
+];
 
 export const DEMO_PARTICIPANT: User = {
   id: 'user-demo',
@@ -15,8 +47,8 @@ export const DEMO_PARTICIPANT: User = {
       status: 'completed',
       completedLessons: 4,
       totalLessons: 4,
-      quizScore: 9,
-      quizMaxScore: 11,
+      quizScore: 10,
+      quizMaxScore: 12,
       lastAccessedAt: '2024-02-14',
       completedAt: '2024-02-14',
     },

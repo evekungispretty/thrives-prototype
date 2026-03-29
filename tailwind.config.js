@@ -5,20 +5,13 @@ export default {
     extend: {
       colors: {
         brand: {
-          navy:        '#00476b',
-          'navy-dark': '#003552',
-          'navy-mid':  '#005a87',
-          mint:        '#a8ebbc',
-          'mint-pale': '#e0f8eb',
-          pink:        '#f2bbd6',
-          'pink-pale': '#fce8f1',
-          blue:        '#80d2e4',
-          'blue-pale': '#d5f1f8',
-          yellow:      '#efe98f',
-          'yellow-pale':'#f9f7d3',
-          peach:       '#fbbd80',
-          'peach-pale': '#fde8ce',
-          gray:        '#757575',
+          navy:   { DEFAULT: '#00476b', dark: '#003552', mid: '#005a87' },
+          mint:   { DEFAULT: '#a8ebbc', pale: '#e0f8eb' },
+          pink:   { DEFAULT: '#f2bbd6', pale: '#fce8f1' },
+          blue:   { DEFAULT: '#80d2e4', pale: '#d5f1f8' },
+          yellow: { DEFAULT: '#efe98f', pale: '#f9f7d3' },
+          peach:  { DEFAULT: '#fbbd80', pale: '#fde8ce' },
+          gray:   '#757575',
         },
         neutral: {
           50:  '#FAFAF9',
@@ -50,5 +43,6 @@ export default {
       },
     },
   },
+  safelist: [],
   plugins: [],
 };

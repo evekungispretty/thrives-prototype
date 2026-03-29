@@ -1,5 +1,5 @@
 import { clsx } from 'clsx';
-import type { ButtonHTMLAttributes } from 'react';
+import type { ButtonHTMLAttributes, CSSProperties } from 'react';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline';
 type Size = 'sm' | 'md' | 'lg';
@@ -11,11 +11,19 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const VARIANTS: Record<Variant, string> = {
-  primary:   'bg-brand-navy text-white hover:bg-brand-navy-dark active:bg-brand-navy-dark',
+  primary:   'text-white hover:opacity-90 active:opacity-80',
   secondary: 'bg-brand-peach text-brand-navy hover:bg-[#f0a96a] active:bg-[#e89855]',
   outline:   'border border-brand-navy text-brand-navy hover:bg-brand-mint-pale active:bg-brand-mint',
   ghost:     'text-neutral-600 hover:bg-neutral-100 active:bg-neutral-200',
   danger:    'bg-red-500 text-white hover:bg-red-600 active:bg-red-700',
+};
+
+const VARIANT_STYLES: Record<Variant, React.CSSProperties> = {
+  primary:   { backgroundColor: '#00476b' },
+  secondary: {},
+  outline:   {},
+  ghost:     {},
+  danger:    {},
 };
 
 const SIZES: Record<Size, string> = {
@@ -30,13 +38,15 @@ export function Button({
   loading,
   disabled,
   className,
+  style,
   children,
   ...props
-}: ButtonProps) {
+}: ButtonProps & { style?: CSSProperties }) {
   return (
     <button
       {...props}
       disabled={disabled || loading}
+      style={{ ...VARIANT_STYLES[variant], ...style }}
       className={clsx(
         'inline-flex items-center justify-center font-medium rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-navy focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer',
         VARIANTS[variant],

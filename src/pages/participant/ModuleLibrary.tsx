@@ -7,23 +7,6 @@ import { TopicBadge, ModuleStatusBadge } from '../../components/ui/Badge';
 import { MODULES } from '../../data/modules';
 import { DEMO_PARTICIPANT } from '../../data/users';
 
-const TOPIC_BG: Record<string, string> = {
-  'infant-feeding':     'from-brand-peach-pale  to-white',
-  'tummy-time':         'from-brand-mint-pale   to-white',
-  'screen-time':        'from-brand-blue-pale   to-white',
-  'sleep':              'from-brand-pink-pale   to-white',
-  'development':        'from-brand-yellow-pale to-white',
-  'caregiver-wellbeing':'from-brand-pink-pale   to-white',
-};
-
-const TOPIC_ICON_COLOR: Record<string, string> = {
-  'infant-feeding':     'bg-brand-peach',
-  'tummy-time':         'bg-brand-mint',
-  'screen-time':        'bg-brand-blue',
-  'sleep':              'bg-brand-pink',
-  'development':        'bg-brand-yellow',
-  'caregiver-wellbeing':'bg-brand-pink',
-};
 
 export function ModuleLibrary() {
   const user = DEMO_PARTICIPANT;
@@ -76,15 +59,26 @@ export function ModuleLibrary() {
               >
                 <Card
                   hover={!isLocked}
-                  className={`bg-gradient-to-br ${TOPIC_BG[mod.tag]} border-0`}
+                  padding="none"
+                  className="bg-white border border-neutral-200 overflow-hidden"
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-3 flex-1 min-w-0">
-                      {/* Icon dot */}
-                      <div className={`w-10 h-10 rounded-xl flex-shrink-0 ${TOPIC_ICON_COLOR[mod.tag]} flex items-center justify-center mt-0.5`}>
-                        <BookOpen size={18} className="text-white" />
-                      </div>
+                  <div className="flex items-stretch">
+                    {/* Thumbnail */}
+                    {mod.thumbnail ? (
+                      <img
+                        src={mod.thumbnail}
+                        alt={mod.title}
+                        className="w-28 flex-shrink-0 min-h-[120px] object-cover"
+                      />
+                    ) : (
+                      <div
+                        className="w-28 flex-shrink-0 min-h-[120px]"
+                        style={{ backgroundColor: mod.lessons[0]?.videoThumb ?? '#e5e7eb' }}
+                      />
+                    )}
 
+                    {/* Content */}
+                    <div className="flex items-start justify-between gap-4 p-5 flex-1">
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-2 mb-1">
                           <h3 className="font-semibold text-neutral-900">{mod.title}</h3>
@@ -109,11 +103,11 @@ export function ModuleLibrary() {
                           <ProgressBar value={pct} size="sm" className="mt-3 max-w-xs" showLabel />
                         )}
                       </div>
-                    </div>
 
-                    {!isLocked && (
-                      <ChevronRight size={18} className="text-neutral-400 flex-shrink-0 mt-1" />
-                    )}
+                      {!isLocked && (
+                        <ChevronRight size={18} className="text-neutral-400 flex-shrink-0 mt-1" />
+                      )}
+                    </div>
                   </div>
                 </Card>
               </Link>
@@ -130,14 +124,14 @@ export function ModuleLibrary() {
               </div>
             </div>
             <div className="flex-1 mb-2">
-              <Card className="bg-neutral-50 border-neutral-200">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-neutral-200 flex items-center justify-center flex-shrink-0">
-                    <BookOpen size={18} className="text-neutral-400" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-neutral-500">{mod.title}</p>
-                    <p className="text-xs text-neutral-400 mt-0.5">Coming soon · {mod.estimatedMinutes} min</p>
+              <Card padding="none" className="bg-neutral-50 border-neutral-200 overflow-hidden">
+                <div className="flex items-stretch">
+                  <div className="w-28 flex-shrink-0 min-h-[72px] bg-neutral-200" />
+                  <div className="flex items-center gap-3 p-5">
+                    <div>
+                      <p className="font-semibold text-neutral-500">{mod.title}</p>
+                      <p className="text-xs text-neutral-400 mt-0.5">Coming soon · {mod.estimatedMinutes} min</p>
+                    </div>
                   </div>
                 </div>
               </Card>

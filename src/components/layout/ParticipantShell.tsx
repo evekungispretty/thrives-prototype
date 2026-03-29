@@ -19,10 +19,9 @@ export function ParticipantShell({ children }: { children: React.ReactNode }) {
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
           {/* Logo */}
           <Link href="/participant/dashboard" className="flex items-center gap-2 group">
-            <div className="w-7 h-7 rounded-lg bg-brand-navy flex items-center justify-center">
-              <Leaf size={14} className="text-white" />
+            <div className="w-20 h-20 rounded-lg flex items-center justify-center">
+              <img src="/images/logo.png" alt="THRIVES" className="object-contain" />
             </div>
-            <span className="font-semibold text-neutral-900 tracking-tight">THRIVES</span>
           </Link>
 
           {/* Nav */}

@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'wouter';
 import { clsx } from 'clsx';
-import { LayoutDashboard, Users, HelpCircle, BookOpen, LogOut, Leaf, Menu } from 'lucide-react';
+import { LayoutDashboard, Users, HelpCircle, BookOpen, BarChart2, LogOut, Menu } from 'lucide-react';
 import { useState } from 'react';
 import { DEMO_ADMIN } from '../../data/users';
 
@@ -9,19 +9,15 @@ const NAV_LINKS = [
   { href: '/admin/users',     label: 'Participants',  icon: Users },
   { href: '/admin/questions', label: 'Question Bank', icon: HelpCircle },
   { href: '/admin/content',   label: 'Content',       icon: BookOpen },
+  { href: '/admin/research',  label: 'Research',      icon: BarChart2 },
 ];
 
-export function AdminShell({ children }: { children: React.ReactNode }) {
-  const [location] = useLocation();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  const SidebarContent = () => (
+function SidebarNav({ location, onNavClick }: { location: string; onNavClick?: () => void }) {
+  return (
     <>
       {/* Logo */}
       <div className="px-5 py-5 flex items-center gap-2.5 border-b border-white/10">
-        <div className="w-7 h-7 rounded-lg bg-brand-mint flex items-center justify-center flex-shrink-0">
-          <Leaf size={14} className="text-brand-navy" />
-        </div>
+        <img src="/images/logo.png" alt="THRIVES" className="w-7 h-7 rounded-lg object-contain flex-shrink-0" />
         <div>
           <div className="font-semibold text-white text-sm tracking-tight">THRIVES</div>
           <div className="text-xs text-white/50 -mt-0.5">Researcher Portal</div>
@@ -36,7 +32,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <Link
               key={href}
               href={href}
-              onClick={() => setSidebarOpen(false)}
+              onClick={onNavClick}
               className={clsx(
                 'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                 active
@@ -68,20 +64,25 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       </div>
     </>
   );
+}
+
+export function AdminShell({ children }: { children: React.ReactNode }) {
+  const [location] = useLocation();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <div className="min-h-screen flex bg-neutral-50">
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex flex-col w-56 bg-brand-navy flex-shrink-0 fixed inset-y-0 left-0 z-30">
-        <SidebarContent />
+      <aside className="hidden lg:flex flex-col w-56 flex-shrink-0 fixed inset-y-0 left-0 z-30" style={{ backgroundColor: '#00476b' }}>
+        <SidebarNav location={location} />
       </aside>
 
       {/* Mobile sidebar */}
       {sidebarOpen && (
         <div className="lg:hidden fixed inset-0 z-40">
           <div className="absolute inset-0 bg-brand-navy/50" onClick={() => setSidebarOpen(false)} />
-          <aside className="absolute left-0 top-0 bottom-0 w-56 bg-brand-navy flex flex-col">
-            <SidebarContent />
+          <aside className="absolute left-0 top-0 bottom-0 w-56 flex flex-col" style={{ backgroundColor: '#00476b' }}>
+            <SidebarNav location={location} onNavClick={() => setSidebarOpen(false)} />
           </aside>
         </div>
       )}
@@ -95,9 +96,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               <Menu size={20} />
             </button>
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded bg-brand-navy flex items-center justify-center">
-                <Leaf size={12} className="text-white" />
-              </div>
+              <img src="/images/logo.png" alt="THRIVES" className="w-6 h-6 rounded object-contain" />
               <span className="font-semibold text-sm text-neutral-900">THRIVES Researcher</span>
             </div>
           </div>

@@ -17,6 +17,7 @@ import { UserManagement } from './pages/admin/UserManagement';
 import { ParticipantDetail } from './pages/admin/ParticipantDetail';
 import { QuestionBank } from './pages/admin/QuestionBank';
 import { ContentManagement } from './pages/admin/ContentManagement';
+import { ResearchReport } from './pages/admin/ResearchReport';
 
 export default function App() {
   return (
@@ -38,6 +39,7 @@ export default function App() {
       <Route path="/admin/users" component={UserManagement} />
       <Route path="/admin/questions" component={QuestionBank} />
       <Route path="/admin/content" component={ContentManagement} />
+      <Route path="/admin/research" component={ResearchReport} />
 
       {/* Fallback */}
       <Route>

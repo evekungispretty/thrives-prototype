@@ -4,6 +4,7 @@ export const MODULES: Module[] = [
   {
     id: 'mod-1',
     title: 'Feeding Your Baby',
+    thumbnail: '/images/tiny-tummies1.jpg',   
     description:
       'Understand the basics of infant feeding — from breastfeeding and formula to responsive feeding cues and introducing solids.',
     tag: 'infant-feeding',
@@ -19,8 +20,10 @@ export const MODULES: Module[] = [
         moduleId: 'mod-1',
         title: 'Understanding Hunger Cues',
         description: 'How to read your baby\'s early and late hunger signals.',
+        topics: ['Hunger cues', 'Responsive feeding', 'Baby behavior'],
         durationMinutes: 8,
         videoThumb: '#D8F3DC',
+        videoUrl: 'https://player.vimeo.com/video/1085765229?h=8ea9ff702d',
         bodyContent: `<p>Babies communicate their hunger long before they cry. Learning to read <strong>early hunger cues</strong> — rooting, sucking motions, bringing hands to mouth — allows you to feed responsively and build trust.</p>
 <p>By the time your baby is crying, they've moved into a <em>late</em> hunger cue. Crying is a stress signal. Responding to early cues keeps feeding calm and positive for both of you.</p>
 <h3>Common early hunger cues</h3>
@@ -41,8 +44,10 @@ export const MODULES: Module[] = [
         moduleId: 'mod-1',
         title: 'Breastfeeding Basics',
         description: 'Latch, positioning, and building a healthy supply.',
+        topics: ['Breastfeeding', 'Latch', 'Milk supply'],
         durationMinutes: 10,
         videoThumb: '#B7E4C7',
+        videoUrl: 'https://player.vimeo.com/video/1079871785?h=7ba52743ec&dnt=1&app_id=122963',
         bodyContent: `<p>A good latch is the foundation of comfortable breastfeeding. Your baby's mouth should cover a wide area of the areola — not just the nipple.</p>
 <p>Signs of a good latch include your baby's chin touching your breast, lips flanged outward, and slow, rhythmic jaw movement with audible swallowing.</p>`,
         resources: [
@@ -55,7 +60,9 @@ export const MODULES: Module[] = [
         id: 'les-1-3',
         moduleId: 'mod-1',
         title: 'Formula Feeding With Confidence',
+        videoUrl: 'https://player.vimeo.com/video/1069210083?h=a450b0546d&dnt=1&app_id=122963',
         description: 'Choosing formula, safe preparation, and responsive bottle-feeding.',
+        topics: ['Formula', 'Bottle feeding', 'Pace feeding'],
         durationMinutes: 8,
         videoThumb: '#FFE8D9',
         bodyContent: `<p>Formula feeding is a valid, nurturing choice. The principles of responsive feeding — paying attention to your baby's cues and pausing to check in — apply just as much to bottle feeding as to breastfeeding.</p>
@@ -70,7 +77,9 @@ export const MODULES: Module[] = [
         id: 'les-1-4',
         moduleId: 'mod-1',
         title: 'Introducing Solid Foods',
+        videoUrl: 'https://player.vimeo.com/video/1079871785?h=7ba52743ec&dnt=1&app_id=122963',
         description: 'Readiness signs, first foods, and progression to family meals.',
+        topics: ['Solid foods', 'Baby-led weaning', 'Nutrition'],
         durationMinutes: 9,
         videoThumb: '#D8F3DC',
         bodyContent: `<p>Most babies are ready for solid foods around 6 months. Signs of readiness include sitting with minimal support, showing interest in food, and having lost the tongue-thrust reflex.</p>
@@ -87,6 +96,7 @@ export const MODULES: Module[] = [
   {
     id: 'mod-2',
     title: 'Tummy Time',
+    thumbnail: '/images/tiny-tummies2.jpeg',   
     description:
       'Learn why tummy time matters, how to make it enjoyable, and how to build it safely into your daily routine.',
     tag: 'tummy-time',
@@ -101,7 +111,9 @@ export const MODULES: Module[] = [
         id: 'les-2-1',
         moduleId: 'mod-2',
         title: 'Why Tummy Time Matters',
+        videoUrl: 'https://player.vimeo.com/video/1079880973?h=631a5b38d1&dnt=1&app_id=122963',
         description: 'The developmental case for supervised prone play.',
+        topics: ['Motor development', 'Head shape', 'Muscle strength'],
         durationMinutes: 6,
         videoThumb: '#52B788',
         bodyContent: `<p>Tummy time strengthens the muscles of the neck, shoulders, and core that babies need to eventually roll, sit, crawl, and walk. It also helps prevent flat spots on the back of the head (positional plagiocephaly).</p>
@@ -116,7 +128,9 @@ export const MODULES: Module[] = [
         id: 'les-2-2',
         moduleId: 'mod-2',
         title: 'Getting Started: Birth to 3 Months',
+        videoUrl: 'https://player.vimeo.com/video/1079881020?h=e718e821de&dnt=1&app_id=122963s',
         description: 'Short sessions on a firm, flat surface from day one.',
+        topics: ['Newborn', 'Daily routine', 'Safe positions'],
         durationMinutes: 7,
         videoThumb: '#74C69D',
         bodyContent: `<p>Start with just 1–2 minutes a few times per day, immediately after diaper changes when your baby is alert and content. Place your baby on a firm, flat surface — a play mat or the floor, never a couch or bed.</p>
@@ -131,7 +145,9 @@ export const MODULES: Module[] = [
         id: 'les-2-3',
         moduleId: 'mod-2',
         title: 'Making Tummy Time Fun',
+        videoUrl: 'https://player.vimeo.com/video/1079881097?h=1121607cb2&dnt=1&app_id=122963',
         description: 'Toys, positions, and ways to engage your baby.',
+        topics: ['Play', 'Engagement', 'Toys & props'],
         durationMinutes: 7,
         videoThumb: '#B7E4C7',
         bodyContent: `<p>Many babies resist tummy time at first — this is normal. Make it engaging by getting down on the floor with them, using high-contrast toys or mirrors placed just in front of them, and keeping sessions short and positive.</p>
@@ -145,6 +161,7 @@ export const MODULES: Module[] = [
   {
     id: 'mod-3',
     title: 'Healthy Screen Time Habits',
+    thumbnail: '/images/tiny-tummies3.png',   
     description:
       'Navigate screen time with young children — understanding the research, setting boundaries, and using media intentionally.',
     tag: 'screen-time',
@@ -160,6 +177,8 @@ export const MODULES: Module[] = [
         moduleId: 'mod-3',
         title: 'What the Research Says',
         description: 'Evidence on screens and early development.',
+        videoUrl: 'https://player.vimeo.com/video/1085765229?h=8ea9ff702d&dnt=1&app_id=122963',
+        topics: ['Research', 'AAP guidelines', 'Child development'],
         durationMinutes: 8,
         videoThumb: '#457B9D',
         bodyContent: `<p>The American Academy of Pediatrics recommends avoiding screen media for children under 18–24 months, with the exception of video chatting. This isn't because screens are inherently harmful — it's because time on screens displaces the interactive play and language-rich environments that drive early learning.</p>
@@ -175,6 +194,7 @@ export const MODULES: Module[] = [
         moduleId: 'mod-3',
         title: 'Setting Realistic Limits',
         description: 'Practical strategies for caregivers.',
+        topics: ['Screen limits', 'Daily routines', 'Family rules'],
         durationMinutes: 9,
         videoThumb: '#93C5FD',
         bodyContent: `<p>Rigid rules often backfire. A more sustainable approach is to create "screen-free" zones or routines — mealtimes, the hour before bed, during play — while being flexible elsewhere.</p>
@@ -188,6 +208,7 @@ export const MODULES: Module[] = [
         moduleId: 'mod-3',
         title: 'Media as a Family Practice',
         description: 'Making intentional choices together.',
+        topics: ['Co-viewing', 'Media choices', 'Modeling habits'],
         durationMinutes: 8,
         videoThumb: '#BFDBFE',
         bodyContent: `<p>The goal isn't to eliminate screens — it's to be intentional. Choose high-quality, slow-paced content when you do use screens. Turn off the TV when it's not actively being watched. And model the device habits you want your child to develop.</p>`,
@@ -202,6 +223,7 @@ export const MODULES: Module[] = [
   {
     id: 'mod-4',
     title: 'Building a Sleep Routine',
+    thumbnail: '/images/tiny-tummies4.png',
     description:
       'Create predictable, calming bedtime routines that support your baby\'s sleep biology and your whole family\'s rest.',
     tag: 'sleep',
@@ -217,6 +239,7 @@ export const MODULES: Module[] = [
         moduleId: 'mod-4',
         title: 'How Infant Sleep Works',
         description: 'Understanding sleep cycles and developmental expectations.',
+        topics: ['Sleep cycles', 'Night waking', 'Development'],
         durationMinutes: 10,
         videoThumb: '#A5B4FC',
         bodyContent: `<p>Infant sleep is fundamentally different from adult sleep. Babies have shorter sleep cycles (45–50 minutes) and spend more time in light, active REM sleep — which is developmentally important and normal.</p>
@@ -230,6 +253,7 @@ export const MODULES: Module[] = [
         moduleId: 'mod-4',
         title: 'Safe Sleep Environments',
         description: 'ABCs of safe sleep — Alone, Back, Crib.',
+        topics: ['Safe sleep', 'SIDS prevention', 'Sleep space'],
         durationMinutes: 8,
         videoThumb: '#C7D2FE',
         bodyContent: `<p>The AAP recommends that babies sleep <strong>Alone</strong>, on their <strong>Back</strong>, in a <strong>Crib</strong> (or similar firm, flat surface) — this is the "ABCs" of safe sleep.</p>
@@ -245,6 +269,7 @@ export const MODULES: Module[] = [
         moduleId: 'mod-4',
         title: 'Bedtime Routines That Work',
         description: 'Creating a simple, repeatable wind-down sequence.',
+        topics: ['Bedtime routine', 'Wind-down', 'Consistency'],
         durationMinutes: 12,
         videoThumb: '#E0E7FF',
         bodyContent: `<p>A consistent bedtime routine — as short as 15–20 minutes — dramatically improves sleep onset and duration for infants and toddlers. The key is predictability, not perfection.</p>
@@ -260,6 +285,7 @@ export const MODULES: Module[] = [
   {
     id: 'mod-5',
     title: 'Developmental Milestones',
+    thumbnail: '/images/tiny-tummies5.jpg',
     description:
       'Track your child\'s growth with confidence — understanding what\'s typical, what to watch for, and when to reach out.',
     tag: 'development',
@@ -275,6 +301,7 @@ export const MODULES: Module[] = [
         moduleId: 'mod-5',
         title: 'The First Year at a Glance',
         description: 'Motor, language, social, and cognitive development from 0–12 months.',
+        topics: ['Motor skills', 'Cognitive growth', '0–12 months'],
         durationMinutes: 12,
         videoThumb: '#FCD34D',
         bodyContent: '<p>Developmental milestones are guidelines, not deadlines. Every baby develops on a unique timeline.</p>',
@@ -287,6 +314,7 @@ export const MODULES: Module[] = [
         moduleId: 'mod-5',
         title: 'Language and Communication',
         description: 'Building the foundation for language through everyday interaction.',
+        topics: ['Language', 'Talking & singing', 'Reading aloud'],
         durationMinutes: 10,
         videoThumb: '#FDE68A',
         bodyContent: '<p>Talking, singing, reading aloud, and narrating your day are the most powerful things you can do to build language.</p>',
@@ -299,6 +327,7 @@ export const MODULES: Module[] = [
         moduleId: 'mod-5',
         title: 'Social and Emotional Development',
         description: 'Attachment, temperament, and early relationship-building.',
+        topics: ['Attachment', 'Emotions', 'Temperament'],
         durationMinutes: 10,
         videoThumb: '#FEF3C7',
         bodyContent: '<p>Secure attachment is built through consistent, sensitive caregiving — not perfection. "Good enough" caregiving is the goal.</p>',
@@ -311,6 +340,7 @@ export const MODULES: Module[] = [
         moduleId: 'mod-5',
         title: 'When to Talk to Your Pediatrician',
         description: 'Red flags, developmental screening, and advocacy tools.',
+        topics: ['Red flags', 'Screening', 'Early intervention'],
         durationMinutes: 8,
         videoThumb: '#FED7AA',
         bodyContent: '<p>Trust your instincts. If something feels off, it is always okay to ask. Early intervention works.</p>',
@@ -338,6 +368,7 @@ export const MODULES: Module[] = [
         moduleId: 'mod-6',
         title: 'Recognizing Caregiver Stress',
         description: 'Signs of burnout, anxiety, and perinatal mood disorders.',
+        topics: ['Mental health', 'Postpartum', 'Burnout'],
         durationMinutes: 10,
         videoThumb: '#FCA5A5',
         bodyContent: '<p>Postpartum depression and anxiety affect 1 in 5 new parents. These are medical conditions, not character flaws, and they are treatable.</p>',
@@ -350,6 +381,7 @@ export const MODULES: Module[] = [
         moduleId: 'mod-6',
         title: 'Building Your Support Network',
         description: 'Practical strategies for finding and accepting help.',
+        topics: ['Support network', 'Community', 'Asking for help'],
         durationMinutes: 8,
         videoThumb: '#FEC4C4',
         bodyContent: '<p>Asking for help is a strength. Being specific about what you need makes it easier for others to support you.</p>',
@@ -362,6 +394,7 @@ export const MODULES: Module[] = [
         moduleId: 'mod-6',
         title: 'Mindful Moments With Your Baby',
         description: 'Simple practices to stay present and connected.',
+        topics: ['Mindfulness', 'Connection', 'Self-care'],
         durationMinutes: 12,
         videoThumb: '#FBCFE8',
         bodyContent: '<p>Mindfulness doesn\'t require meditation. Simply narrating what you observe, taking three slow breaths, or noticing one small thing your baby does each day can shift your nervous system.</p>',

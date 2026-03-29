@@ -74,35 +74,50 @@ export function LessonDetail() {
         {/* Main content */}
         <div className="lg:col-span-2">
           {/* Video area */}
-          <div
-            className="relative w-full rounded-2xl overflow-hidden mb-6 cursor-pointer group"
-            style={{
-              aspectRatio: '16/9',
-              background: lesson.videoThumb,
-            }}
-            onClick={() => setVideoPlaying(!videoPlaying)}
-          >
-            <div className="absolute inset-0 flex items-center justify-center">
-              {videoPlaying ? (
-                <div className="text-center">
-                  <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3">
-                    <div className="w-4 h-4 border-l-2 border-r-2 border-white" />
+          {lesson.videoUrl ? (
+            <div
+              className="relative w-full rounded-2xl overflow-hidden mb-6"
+              style={{ aspectRatio: '16/9' }}
+            >
+              <iframe
+                src={lesson.videoUrl}
+                className="absolute inset-0 w-full h-full"
+                allow="autoplay; fullscreen; picture-in-picture"
+                allowFullScreen
+                title={lesson.title}
+              />
+            </div>
+          ) : (
+            <div
+              className="relative w-full rounded-2xl overflow-hidden mb-6 cursor-pointer group"
+              style={{
+                aspectRatio: '16/9',
+                background: lesson.videoThumb,
+              }}
+              onClick={() => setVideoPlaying(!videoPlaying)}
+            >
+              <div className="absolute inset-0 flex items-center justify-center">
+                {videoPlaying ? (
+                  <div className="text-center">
+                    <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3">
+                      <div className="w-4 h-4 border-l-2 border-r-2 border-white" />
+                    </div>
+                    <p className="text-white/80 text-sm font-medium">Lesson in progress…</p>
+                    <p className="text-white/60 text-xs mt-1">(Demo prototype — no actual video)</p>
                   </div>
-                  <p className="text-white/80 text-sm font-medium">Lesson in progress…</p>
-                  <p className="text-white/60 text-xs mt-1">(Demo prototype — no actual video)</p>
-                </div>
-              ) : (
-                <div className="w-16 h-16 rounded-full bg-white/90 shadow-card-md flex items-center justify-center group-hover:scale-105 transition-transform">
-                  <Play size={22} className="text-neutral-800 ml-1" />
-                </div>
-              )}
-            </div>
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-white/90 shadow-card-md flex items-center justify-center group-hover:scale-105 transition-transform">
+                    <Play size={22} className="text-neutral-800 ml-1" />
+                  </div>
+                )}
+              </div>
 
-            {/* Duration badge */}
-            <div className="absolute bottom-3 right-3 bg-black/50 text-white text-xs px-2 py-1 rounded-md">
-              {lesson.durationMinutes}:00
+              {/* Duration badge */}
+              <div className="absolute bottom-3 right-3 bg-black/50 text-white text-xs px-2 py-1 rounded-md">
+                {lesson.durationMinutes}:00
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Lesson header */}
           <div className="mb-6">
@@ -184,19 +199,11 @@ export function LessonDetail() {
                     key={l.id}
                     href={`/participant/modules/${moduleId}/lesson/${l.id}`}
                     className={`flex items-center gap-3 px-4 py-3 transition-colors ${
-                      current ? 'bg-brand-mint-pale' : 'hover:bg-neutral-50'
+                      current ? 'bg-neutral-100' : 'hover:bg-neutral-50'
                     }`}
                   >
-                    <div
-                      className={`w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-semibold ${
-                        done
-                          ? 'bg-brand-navy text-white'
-                          : current
-                          ? 'bg-brand-peach text-white'
-                          : 'bg-neutral-100 text-neutral-500'
-                      }`}
-                    >
-                      {done ? <CheckCircle2 size={12} /> : idx + 1}
+                    <div className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-semibold bg-neutral-100 text-neutral-500">
+                      {idx + 1}
                     </div>
                     <p className={`text-xs ${current ? 'font-semibold text-brand-navy' : done ? 'text-neutral-500' : 'text-neutral-700'}`}>
                       {l.title}

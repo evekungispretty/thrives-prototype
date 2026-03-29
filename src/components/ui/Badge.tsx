@@ -62,6 +62,16 @@ const PART_STATUS_STYLES: Record<ParticipantStatus, string> = {
   enrolled:  'bg-brand-yellow-pale text-brand-navy',
 };
 
+// ─── Completed Lesson Badge ───────────────────────────────────────────────────
+
+export function CompletedBadge() {
+  return (
+    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+      Completed
+    </span>
+  );
+}
+
 export function ParticipantStatusBadge({ status }: { status: ParticipantStatus }) {
   const label = status.charAt(0).toUpperCase() + status.slice(1);
   return (

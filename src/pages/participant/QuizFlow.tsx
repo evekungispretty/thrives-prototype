@@ -1,11 +1,12 @@
 import { useParams, useLocation } from 'wouter';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { CheckCircle2, XCircle, ArrowRight, RotateCcw, Trophy } from 'lucide-react';
 import { ParticipantShell } from '../../components/layout/ParticipantShell';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { MODULES } from '../../data/modules';
 import { QUESTIONS } from '../../data/questions';
+import { quizStore } from '../../stores/quizStore';
 import type { Question } from '../../types';
 
 type QuizPhase = 'intro' | 'question' | 'feedback' | 'complete';
@@ -27,6 +28,7 @@ export function QuizFlow() {
   const [submitted, setSubmitted] = useState(false);
   const [matchSelections, setMatchSelections] = useState<Record<string, string>>({});
   const [shuffledRights, setShuffledRights] = useState<string[]>([]);
+  const savedRef = useRef(false);
 
   const currentQ = questions[currentIdx];
   const isLast = currentIdx === questions.length - 1;
@@ -54,6 +56,32 @@ export function QuizFlow() {
 
   const handleNext = () => {
     if (isLast) {
+      if (!savedRef.current && mod) {
+        savedRef.current = true;
+        const { earned, max } = calcScore();
+        const results = questions.map(q => {
+          const ans = answers[q.id] ?? '';
+          const correctId = q.options?.find(o => o.isCorrect)?.id;
+          const isCorrect = q.type === 'multiple_choice' ? ans === correctId : undefined;
+          return {
+            questionId: q.id,
+            answer: ans,
+            isCorrect,
+            score: isCorrect === true ? q.points : isCorrect === false ? 0 : undefined,
+          };
+        });
+        quizStore.add({
+          id: `att-${Date.now()}`,
+          userId: 'user-demo',
+          moduleId: moduleId!,
+          quizId: mod.quizId,
+          completedAt: new Date().toISOString().split('T')[0],
+          results,
+          totalScore: earned,
+          maxScore: max,
+          passed: max > 0 && earned / max >= 0.67,
+        });
+      }
       setPhase('complete');
     } else {
       const next = currentIdx + 1;
@@ -170,13 +198,13 @@ export function QuizFlow() {
                     const selected = currentQ.type === 'multi_select'
                       ? (Array.isArray(answers[currentQ.id]) ? (answers[currentQ.id] as string[]).includes(opt.id) : false)
                       : answers[currentQ.id] === opt.id;
-                    const showFeedback = submitted && currentQ.type === 'multiple_choice';
+                    const showFeedback = submitted && (currentQ.type === 'multiple_choice' || currentQ.type === 'multi_select');
                     const isCorrect = opt.isCorrect;
 
                     return (
                       <button
                         key={opt.id}
-                        disabled={submitted && currentQ.type === 'multiple_choice'}
+                        disabled={submitted && (currentQ.type === 'multiple_choice' || currentQ.type === 'multi_select')}
                         onClick={() => {
                           if (submitted) return;
                           if (currentQ.type === 'multi_select') {
@@ -286,31 +314,60 @@ export function QuizFlow() {
               )}
 
               {/* Feedback message */}
-              {submitted && currentQ.type === 'multiple_choice' && (
-                <div className={`mt-4 p-3 rounded-xl text-sm ${
-                  answers[currentQ.id] === currentQ.options?.find(o => o.isCorrect)?.id
-                    ? 'bg-brand-mint-pale border border-brand-mint text-brand-navy'
-                    : 'bg-brand-peach-pale border border-brand-peach text-brand-navy'
-                }`}>
-                  {answers[currentQ.id] === currentQ.options?.find(o => o.isCorrect)?.id
-                    ? '✓ Correct! Well done.'
-                    : `Not quite — the correct answer is highlighted above.`}
-                </div>
-              )}
+              {submitted && currentQ.type === 'multiple_choice' && (() => {
+                const isCorrect = answers[currentQ.id] === currentQ.options?.find(o => o.isCorrect)?.id;
+                return (
+                  <div className={`mt-4 p-4 rounded-xl text-sm ${
+                    isCorrect
+                      ? 'bg-brand-mint-pale border border-brand-mint text-brand-navy'
+                      : 'bg-brand-peach-pale border border-brand-peach text-brand-navy'
+                  }`}>
+                    <p className="font-semibold mb-1">
+                      {isCorrect ? '✓ Correct!' : '✗ Not quite.'}
+                    </p>
+                    {currentQ.feedback && (
+                      <p className="text-sm opacity-90">{currentQ.feedback}</p>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {submitted && currentQ.type === 'multi_select' && (() => {
+                const correctIds = currentQ.options?.filter(o => o.isCorrect).map(o => o.id) ?? [];
+                const selected = Array.isArray(answers[currentQ.id]) ? answers[currentQ.id] as string[] : [];
+                const isCorrect = correctIds.every(id => selected.includes(id)) && selected.every(id => correctIds.includes(id));
+                return (
+                  <div className={`mt-4 p-4 rounded-xl text-sm ${
+                    isCorrect
+                      ? 'bg-brand-mint-pale border border-brand-mint text-brand-navy'
+                      : 'bg-brand-peach-pale border border-brand-peach text-brand-navy'
+                  }`}>
+                    <p className="font-semibold mb-1">
+                      {isCorrect ? '✓ Correct!' : '✗ Not quite.'}
+                    </p>
+                    {currentQ.feedback && (
+                      <p className="text-sm opacity-90">{currentQ.feedback}</p>
+                    )}
+                  </div>
+                );
+              })()}
 
               {submitted && currentQ.type === 'short_text' && (
-                <div className="mt-4 p-3 rounded-xl text-sm bg-blue-50 border border-blue-200 text-blue-800">
-                  <p className="font-medium mb-1">Model answer:</p>
-                  <p>{currentQ.correctAnswer}</p>
+                <div className="mt-4 p-4 rounded-xl text-sm bg-blue-50 border border-blue-200 text-blue-800">
+                  <p className="font-semibold mb-1">Model answer:</p>
+                  <p className="mb-2">{currentQ.correctAnswer}</p>
+                  {currentQ.feedback && (
+                    <p className="opacity-90">{currentQ.feedback}</p>
+                  )}
                 </div>
               )}
 
               {/* Actions */}
               <div className="mt-6 flex justify-end gap-2">
-                {!submitted && (currentQ.type === 'multiple_choice' || currentQ.type === 'short_text') && (
+                {!submitted && (currentQ.type === 'multiple_choice' || currentQ.type === 'multi_select' || currentQ.type === 'short_text') && (
                   <Button
                     onClick={handleSubmitAnswer}
-                    disabled={!answers[currentQ.id]}
+                    disabled={!answers[currentQ.id] || (currentQ.type === 'multi_select' && !(answers[currentQ.id] as string[])?.length)}
                     variant="outline"
                     size="sm"
                   >

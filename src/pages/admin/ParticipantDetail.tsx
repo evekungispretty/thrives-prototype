@@ -7,15 +7,7 @@ import { TopicBadge, ModuleStatusBadge, ParticipantStatusBadge } from '../../com
 import { MODULES } from '../../data/modules';
 import { ALL_PARTICIPANTS } from '../../data/users';
 import { QUESTIONS } from '../../data/questions';
-
-// Sample answer data for the demo
-const SAMPLE_ANSWERS: Record<string, string> = {
-  'q-1-1': 'b', // correct
-  'q-1-2': 'matched correctly',
-  'q-1-3': 'c', // correct
-  'q-1-4': 'Responsive feeding helps babies learn to trust their hunger and fullness signals, building a foundation for healthy eating habits.',
-  'q-1-5': 'a,b,d',
-};
+import { quizStore } from '../../stores/quizStore';
 
 export function ParticipantDetail() {
   const { id } = useParams<{ id: string }>();
@@ -35,6 +27,7 @@ export function ParticipantDetail() {
   const totalLessons = MODULES.reduce((s, m) => s + m.lessons.length, 0);
 
   const quizMod1Questions = QUESTIONS.filter(q => q.moduleId === 'mod-1');
+  const mod1Attempt = quizStore.getForUser(user.id).find(a => a.moduleId === 'mod-1');
 
   return (
     <AdminShell>
@@ -130,12 +123,16 @@ export function ParticipantDetail() {
           <Card>
             <h2 className="text-sm font-semibold text-neutral-800 mb-1">Quiz Responses — Feeding Your Baby</h2>
             <p className="text-xs text-neutral-400 mb-4">Showing question-level detail for completed module</p>
+            {!mod1Attempt && (
+              <p className="text-sm text-neutral-400 italic">No quiz attempt on record.</p>
+            )}
             <div className="flex flex-col gap-4">
               {quizMod1Questions.map((q, idx) => {
-                const ans = SAMPLE_ANSWERS[q.id];
+                const result = mod1Attempt?.results.find(r => r.questionId === q.id);
+                const ans = typeof result?.answer === 'string' ? result.answer : undefined;
                 const correctOpt = q.options?.find(o => o.isCorrect);
                 const selectedOpt = q.options?.find(o => o.id === ans);
-                const isCorrect = q.type === 'multiple_choice' ? ans === correctOpt?.id : true;
+                const isCorrect = result?.isCorrect ?? false;
 
                 return (
                   <div key={q.id} className="border border-neutral-150 rounded-xl p-4">

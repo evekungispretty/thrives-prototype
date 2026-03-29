@@ -1,5 +1,5 @@
 import { useLocation } from 'wouter';
-import { Leaf, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 export function Login() {
   const [, navigate] = useLocation();
@@ -9,13 +9,7 @@ export function Login() {
       <div className="w-full max-w-md animate-slide-up">
         {/* Logo */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-brand-navy mb-4 shadow-card-md">
-            <Leaf size={28} className="text-brand-mint" />
-          </div>
-          <h1 className="text-3xl font-bold text-brand-navy tracking-tight">THRIVES</h1>
-          <p className="mt-1.5 text-neutral-500 text-sm leading-relaxed">
-            Teaching Healthy Routines in Very Early Stages
-          </p>
+            <img src="/images/logo.png" alt="THRIVES logo" className="w-100 h-1-- object-contain" />
         </div>
 
         {/* Role select card */}
@@ -26,7 +20,7 @@ export function Login() {
             {/* Participant */}
             <button
               onClick={() => navigate('/participant/dashboard')}
-              className="group w-full flex items-center justify-between p-4 rounded-xl border-2 border-brand-mint bg-brand-mint-pale hover:border-brand-navy hover:bg-brand-mint transition-all text-left"
+              className="group w-full flex items-center justify-between p-4 rounded-xl border-2 border-brand-mint bg-brand-mint/30 hover:bg-brand-mint/60 transition-all text-left"
             >
               <div>
                 <p className="font-semibold text-brand-navy">Caregiver / Participant</p>
@@ -38,7 +32,7 @@ export function Login() {
             {/* Admin */}
             <button
               onClick={() => navigate('/admin/dashboard')}
-              className="group w-full flex items-center justify-between p-4 rounded-xl border-2 border-brand-blue bg-brand-blue-pale hover:border-brand-navy hover:bg-brand-blue transition-all text-left"
+              className="group w-full flex items-center justify-between p-4 rounded-xl border-2 border-brand-blue bg-brand-blue/30 hover:bg-brand-blue/60 transition-all text-left"
             >
               <div>
                 <p className="font-semibold text-brand-navy">Researcher / Admin</p>

@@ -48,7 +48,7 @@ export function AdminDashboard() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-neutral-900">Researcher Dashboard</h1>
         <p className="text-neutral-500 text-sm mt-1">
-          THRIVES Program · Spring 2024 Overview
+          THRIVES Program · Spring 2025 Overview
         </p>
       </div>
 

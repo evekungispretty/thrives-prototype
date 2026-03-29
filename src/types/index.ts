@@ -17,8 +17,10 @@ export interface Lesson {
   description: string;
   durationMinutes: number;
   videoThumb: string; // color swatch or emoji for placeholder
+  videoUrl?: string;  // Vimeo embed URL, e.g. https://player.vimeo.com/video/ID?h=HASH
   bodyContent: string; // simple HTML or markdown-ish string
   resources: { label: string; url: string }[];
+  topics?: string[];
   order: number;
   status: LessonStatus;
 }
@@ -35,6 +37,7 @@ export interface Module {
   status: ModuleStatus;
   completedLessons: number;
   publishState: 'published' | 'draft';
+  thumbnail?: string; // path relative to public, e.g. /images/mod-feeding.jpg
 }
 
 // ─── Quiz & Questions ─────────────────────────────────────────────────────────
@@ -65,6 +68,7 @@ export interface Question {
   scaleMax?: number;
   scaleLabels?: [string, string];
   correctAnswer?: string;        // short_text model answer
+  feedback?: string;             // explanation shown after answer is checked
   points: number;
   order: number;
 }
