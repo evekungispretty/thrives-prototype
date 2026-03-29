@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, Plus, Edit2, Eye, EyeOff, GripVertical, BookOpen, Clock, FileQuestion, Trash2, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, Edit2, Eye, EyeOff, GripVertical, BookOpen, Clock, FileQuestion, Trash2, ChevronUp, ImageIcon, ExternalLink, Tag } from 'lucide-react';
 import { AdminShell } from '../../components/layout/AdminShell';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -56,6 +56,11 @@ function moduleToForm(mod: Module): ModuleFormState {
 
 // ─── Lesson draft ─────────────────────────────────────────────────────────────
 
+interface ResourceDraft {
+  label: string;
+  url: string;
+}
+
 interface LessonDraft {
   _key: string; // stable React key (id for existing, temp id for new)
   id: string;
@@ -63,7 +68,10 @@ interface LessonDraft {
   description: string;
   durationMinutes: string;
   videoUrl: string;
-  // preserve fields we don't edit so the Lesson object stays complete
+  videoThumb: string;       // hex color for placeholder background
+  bodyContent: string;      // HTML shown in lesson body
+  topics: string;           // comma-separated → string[]
+  resources: ResourceDraft[];
   _original?: Lesson;
 }
 
@@ -75,6 +83,10 @@ function lessonToDraft(lesson: Lesson): LessonDraft {
     description: lesson.description,
     durationMinutes: String(lesson.durationMinutes),
     videoUrl: lesson.videoUrl ?? '',
+    videoThumb: lesson.videoThumb ?? '#E2E8F0',
+    bodyContent: lesson.bodyContent ?? '',
+    topics: (lesson.topics ?? []).join(', '),
+    resources: lesson.resources.length > 0 ? lesson.resources.map(r => ({ ...r })) : [],
     _original: lesson,
   };
 }
@@ -100,13 +112,21 @@ function draftToLesson(draft: LessonDraft, moduleId: string, order: number): Les
     description: draft.description.trim(),
     durationMinutes: Math.max(1, Number(draft.durationMinutes) || 1),
     videoUrl: draft.videoUrl.trim() || undefined,
+    videoThumb: draft.videoThumb,
+    bodyContent: draft.bodyContent,
+    topics: draft.topics.split(',').map(t => t.trim()).filter(Boolean),
+    resources: draft.resources.filter(r => r.label.trim()),
     order,
   };
 }
 
 const EMPTY_LESSON_DRAFT = (): LessonDraft => {
   const key = `new-${Date.now()}-${Math.random()}`;
-  return { _key: key, id: key, title: '', description: '', durationMinutes: '5', videoUrl: '' };
+  return {
+    _key: key, id: key, title: '', description: '',
+    durationMinutes: '5', videoUrl: '', videoThumb: '#E2E8F0',
+    bodyContent: '', topics: '', resources: [],
+  };
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -185,6 +205,27 @@ export function ContentManagement() {
   const deleteLesson = (key: string) => {
     setLessonDrafts(prev => prev.filter(d => d._key !== key));
     setExpandedLessonKeys(prev => { const next = new Set(prev); next.delete(key); return next; });
+  };
+
+  const addResource = (key: string) => {
+    updateLesson(key, {
+      resources: [...(lessonDrafts.find(d => d._key === key)?.resources ?? []), { label: '', url: '' }],
+    });
+  };
+
+  const updateResource = (lessonKey: string, idx: number, patch: Partial<ResourceDraft>) => {
+    setLessonDrafts(prev => prev.map(d => {
+      if (d._key !== lessonKey) return d;
+      const resources = d.resources.map((r, i) => i === idx ? { ...r, ...patch } : r);
+      return { ...d, resources };
+    }));
+  };
+
+  const removeResource = (lessonKey: string, idx: number) => {
+    setLessonDrafts(prev => prev.map(d => {
+      if (d._key !== lessonKey) return d;
+      return { ...d, resources: d.resources.filter((_, i) => i !== idx) };
+    }));
   };
 
   // ── Validate & save ───────────────────────────────────────────────────────
@@ -289,7 +330,13 @@ export function ContentManagement() {
                 onClick={() => toggle(mod.id)}
               >
                 <GripVertical size={16} className="text-neutral-300 flex-shrink-0" />
-                <div className="w-7 h-7 rounded-lg bg-neutral-100 flex items-center justify-center text-xs font-semibold text-neutral-500 flex-shrink-0">
+                {mod.thumbnail
+                  ? <img src={mod.thumbnail} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-neutral-200" />
+                  : <div className="w-10 h-10 rounded-lg bg-neutral-100 flex items-center justify-center flex-shrink-0 border border-neutral-200">
+                      <ImageIcon size={16} className="text-neutral-300" />
+                    </div>
+                }
+                <div className="w-5 h-5 rounded bg-neutral-100 flex items-center justify-center text-xs font-semibold text-neutral-500 flex-shrink-0">
                   {modIdx + 1}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -339,8 +386,7 @@ export function ContentManagement() {
                     >
                       <GripVertical size={14} className="text-neutral-200 flex-shrink-0 ml-9" />
                       <div
-                        className="w-6 h-6 rounded flex items-center justify-center text-xs font-medium flex-shrink-0"
-                        style={{ background: lesson.videoThumb }}
+                        className="w-6 h-6 rounded flex items-center justify-center text-xs font-medium flex-shrink-0 bg-brand-mint-pale text-brand-navy"
                       >
                         {lessonIdx + 1}
                       </div>
@@ -419,21 +465,49 @@ export function ContentManagement() {
                 options={PUBLISH_OPTIONS}
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                label="Estimated minutes"
-                type="number"
-                min={1}
-                value={form.estimatedMinutes}
-                onChange={e => setForm(f => ({ ...f, estimatedMinutes: e.target.value }))}
-                error={errors.estimatedMinutes}
-              />
-              <Input
-                label="Thumbnail URL"
-                value={form.thumbnail}
-                onChange={e => setForm(f => ({ ...f, thumbnail: e.target.value }))}
-                placeholder="/images/my-module.jpg"
-              />
+            <Input
+              label="Estimated minutes"
+              type="number"
+              min={1}
+              value={form.estimatedMinutes}
+              onChange={e => setForm(f => ({ ...f, estimatedMinutes: e.target.value }))}
+              error={errors.estimatedMinutes}
+            />
+
+            {/* Thumbnail */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium text-neutral-700">Module Thumbnail</label>
+              <div className="flex gap-3 items-start">
+                {/* Preview */}
+                <div className="w-24 h-24 rounded-xl border-2 border-dashed border-neutral-200 bg-neutral-50 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                  {form.thumbnail
+                    ? <img src={form.thumbnail} alt="Thumbnail preview" className="w-full h-full object-cover" />
+                    : <div className="flex flex-col items-center gap-1 text-neutral-300">
+                        <ImageIcon size={22} />
+                        <span className="text-xs">Preview</span>
+                      </div>
+                  }
+                </div>
+                {/* URL input + clear */}
+                <div className="flex-1 flex flex-col gap-2">
+                  <Input
+                    label=""
+                    value={form.thumbnail}
+                    onChange={e => setForm(f => ({ ...f, thumbnail: e.target.value }))}
+                    placeholder="Paste image URL, e.g. /images/sleep-module.jpg"
+                  />
+                  {form.thumbnail && (
+                    <button
+                      type="button"
+                      onClick={() => setForm(f => ({ ...f, thumbnail: '' }))}
+                      className="text-xs text-red-400 hover:text-red-600 text-left transition-colors"
+                    >
+                      Remove thumbnail
+                    </button>
+                  )}
+                  <p className="text-xs text-neutral-400">Recommended: 400×400 px, JPG or PNG</p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -483,7 +557,9 @@ export function ContentManagement() {
 
                   {/* Lesson edit fields */}
                   {isOpen && (
-                    <div className="px-4 py-4 flex flex-col gap-3 border-t border-neutral-100">
+                    <div className="px-4 py-4 flex flex-col gap-4 border-t border-neutral-100">
+
+                      {/* ── Basic info ── */}
                       <Input
                         label="Lesson title"
                         value={draft.title}
@@ -497,6 +573,8 @@ export function ContentManagement() {
                         placeholder="Short summary shown in the lesson list…"
                         rows={2}
                       />
+
+                      {/* ── Video ── */}
                       <div className="grid grid-cols-2 gap-3">
                         <Input
                           label="Duration (minutes)"
@@ -512,6 +590,87 @@ export function ContentManagement() {
                           placeholder="https://player.vimeo.com/…"
                         />
                       </div>
+                      <div className="flex items-center gap-3">
+                        <label className="text-sm font-medium text-neutral-700 flex-shrink-0">
+                          Video placeholder colour
+                        </label>
+                        <input
+                          type="color"
+                          value={draft.videoThumb}
+                          onChange={e => updateLesson(draft._key, { videoThumb: e.target.value })}
+                          className="w-8 h-8 rounded cursor-pointer border border-neutral-200"
+                          title="Shown when no video URL is set"
+                        />
+                        <span className="text-xs text-neutral-400 font-mono">{draft.videoThumb}</span>
+                        <span className="text-xs text-neutral-400">(shown when no video URL is set)</span>
+                      </div>
+
+                      {/* ── Body content ── */}
+                      <Textarea
+                        label="Lesson body content (HTML)"
+                        value={draft.bodyContent}
+                        onChange={e => updateLesson(draft._key, { bodyContent: e.target.value })}
+                        placeholder="<p>Enter lesson content…</p>"
+                        rows={5}
+                      />
+
+                      {/* ── Topics (What You'll Learn) ── */}
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-sm font-medium text-neutral-700 flex items-center gap-1.5">
+                          <Tag size={13} className="text-neutral-400" /> Topics — "What You'll Learn"
+                        </label>
+                        <Input
+                          label=""
+                          value={draft.topics}
+                          onChange={e => updateLesson(draft._key, { topics: e.target.value })}
+                          placeholder="Hunger cues, Responsive feeding, Baby behavior"
+                        />
+                        <p className="text-xs text-neutral-400">Comma-separated. Shown as pill tags on the module overview.</p>
+                        {draft.topics && (
+                          <div className="flex flex-wrap gap-1.5 mt-0.5">
+                            {draft.topics.split(',').map(t => t.trim()).filter(Boolean).map(t => (
+                              <span key={t} className="px-2.5 py-1 rounded-full bg-brand-blue-pale text-brand-navy text-xs">{t}</span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* ── Resources ── */}
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-medium text-neutral-700 flex items-center gap-1.5">
+                          <ExternalLink size={13} className="text-neutral-400" /> Resource links
+                        </label>
+                        {draft.resources.map((res, rIdx) => (
+                          <div key={rIdx} className="flex items-center gap-2">
+                            <Input
+                              label=""
+                              value={res.label}
+                              onChange={e => updateResource(draft._key, rIdx, { label: e.target.value })}
+                              placeholder="Link label"
+                            />
+                            <Input
+                              label=""
+                              value={res.url}
+                              onChange={e => updateResource(draft._key, rIdx, { url: e.target.value })}
+                              placeholder="https://…"
+                            />
+                            <button
+                              onClick={() => removeResource(draft._key, rIdx)}
+                              className="w-7 h-7 flex-shrink-0 rounded-lg hover:bg-red-50 flex items-center justify-center text-neutral-300 hover:text-red-500 transition-colors"
+                              title="Remove resource"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        ))}
+                        <button
+                          onClick={() => addResource(draft._key)}
+                          className="flex items-center gap-1.5 text-xs text-brand-navy hover:text-brand-navy/80 transition-colors self-start"
+                        >
+                          <Plus size={12} /> Add resource link
+                        </button>
+                      </div>
+
                     </div>
                   )}
                 </div>

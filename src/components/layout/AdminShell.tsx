@@ -7,7 +7,7 @@ import { DEMO_ADMIN } from '../../data/users';
 const NAV_LINKS = [
   { href: '/admin/dashboard', label: 'Dashboard',    icon: LayoutDashboard },
   { href: '/admin/users',     label: 'Participants',  icon: Users },
-  { href: '/admin/questions', label: 'Question Bank', icon: HelpCircle },
+  { href: '/admin/questions', label: 'Quizzes',       icon: HelpCircle },
   { href: '/admin/content',   label: 'Content',       icon: BookOpen },
   { href: '/admin/research',  label: 'Research',      icon: BarChart2 },
 ];
