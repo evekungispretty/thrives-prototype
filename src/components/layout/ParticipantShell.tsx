@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'wouter';
 import { clsx } from 'clsx';
-import { LayoutDashboard, BookOpen, BarChart2, LogOut, Leaf } from 'lucide-react';
+import { LayoutDashboard, BookOpen, BarChart2, LogOut } from 'lucide-react';
 import { DEMO_PARTICIPANT } from '../../data/users';
 
 const NAV_LINKS = [

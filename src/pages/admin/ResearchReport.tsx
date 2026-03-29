@@ -164,7 +164,7 @@ export function ResearchReport() {
                   <span className="flex-1 border-b border-neutral-200" />
                 </h2>
                 <div className="flex flex-col gap-4">
-                  {sectionQs.map((q, qi) => {
+                  {sectionQs.map((q, _qi) => {
                     const counts = getOptionCounts(filteredAttempts, q.id);
                     const totalAnswered = Object.values(counts).reduce((s, c) => s + c, 0);
                     const correctId = q.options?.find(o => o.isCorrect)?.id;
