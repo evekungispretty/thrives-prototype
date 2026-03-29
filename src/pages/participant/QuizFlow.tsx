@@ -52,9 +52,13 @@ export function QuizFlow() {
     setAnswers(prev => ({ ...prev, [qId]: val }));
   };
 
-  const handleSubmitAnswer = () => setSubmitted(true);
+  const checkableTypes = ['multiple_choice', 'multi_select', 'short_text'];
 
   const handleNext = () => {
+    if (!submitted && checkableTypes.includes(currentQ.type)) {
+      setSubmitted(true);
+      return;
+    }
     if (isLast) {
       if (!savedRef.current && mod) {
         savedRef.current = true;
@@ -364,16 +368,6 @@ export function QuizFlow() {
 
               {/* Actions */}
               <div className="mt-6 flex justify-end gap-2">
-                {!submitted && (currentQ.type === 'multiple_choice' || currentQ.type === 'multi_select' || currentQ.type === 'short_text') && (
-                  <Button
-                    onClick={handleSubmitAnswer}
-                    disabled={!answers[currentQ.id] || (currentQ.type === 'multi_select' && !(answers[currentQ.id] as string[])?.length)}
-                    variant="outline"
-                    size="sm"
-                  >
-                    Check Answer
-                  </Button>
-                )}
                 <Button onClick={handleNext} size="sm">
                   {isLast ? 'See Results' : 'Next Question'} <ArrowRight size={14} />
                 </Button>
