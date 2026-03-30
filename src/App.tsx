@@ -9,6 +9,7 @@ import { ModuleLibrary } from './pages/participant/ModuleLibrary';
 import { ModuleOverview } from './pages/participant/ModuleOverview';
 import { LessonDetail } from './pages/participant/LessonDetail';
 import { QuizFlow } from './pages/participant/QuizFlow';
+import { QuizReview } from './pages/participant/QuizReview';
 import { ParticipantProgress } from './pages/participant/Progress';
 
 // Admin
@@ -29,6 +30,7 @@ export default function App() {
       <Route path="/participant/dashboard" component={ParticipantDashboard} />
       <Route path="/participant/modules" component={ModuleLibrary} />
       <Route path="/participant/modules/:id/lesson/:lessonId" component={LessonDetail} />
+      <Route path="/participant/modules/:id/quiz/review" component={QuizReview} />
       <Route path="/participant/modules/:id/quiz" component={QuizFlow} />
       <Route path="/participant/modules/:id" component={ModuleOverview} />
       <Route path="/participant/progress" component={ParticipantProgress} />
