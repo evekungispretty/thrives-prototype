@@ -222,7 +222,7 @@ function ReviewCard({
 
   const SECTIONS = [
     { id: 'your' as const, label: 'Your Answer' },
-    { id: 'correct' as const, label: 'Correct Answer' },
+    ...(isCorrect === false ? [{ id: 'correct' as const, label: 'Correct Answer' }] : []),
     { id: 'why' as const, label: 'Why' },
   ];
 
