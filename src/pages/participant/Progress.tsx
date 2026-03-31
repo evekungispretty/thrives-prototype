@@ -2,7 +2,7 @@ import { CheckCircle2, Clock, Trophy, BookOpen, ArrowRight, Target } from 'lucid
 import { Link } from 'wouter';
 import { ParticipantShell } from '../../components/layout/ParticipantShell';
 import { Card } from '../../components/ui/Card';
-import { ProgressBar, CircleProgress } from '../../components/ui/ProgressBar';
+import { ProgressBar } from '../../components/ui/ProgressBar';
 import { TopicBadge, ModuleStatusBadge } from '../../components/ui/Badge';
 import { MODULES } from '../../data/modules';
 import { DEMO_PARTICIPANT } from '../../data/users';
@@ -56,9 +56,12 @@ export function ParticipantProgress() {
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Module detail */}
         <div className="lg:col-span-2">
-          <h2 className="text-base font-semibold text-neutral-800 mb-4">Module Progress</h2>
+          <h2 className="text-base font-semibold text-neutral-800 mb-4">Completed Modules</h2>
           <div className="flex flex-col gap-3">
-            {publishedMods.map(mod => {
+            {publishedMods.filter(mod => {
+              const prog = user.progress.find(p => p.moduleId === mod.id);
+              return prog?.status === 'completed';
+            }).map(mod => {
               const prog = user.progress.find(p => p.moduleId === mod.id);
               const status = prog?.status ?? 'not_started';
               const pct = prog ? Math.round((prog.completedLessons / prog.totalLessons) * 100) : 0;
@@ -67,7 +70,14 @@ export function ParticipantProgress() {
 
               return (
                 <Card key={mod.id}>
-                  <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-4">
+                    {mod.thumbnail && (
+                      <img
+                        src={mod.thumbnail}
+                        alt={mod.title}
+                        className="w-20 h-14 object-cover rounded-md flex-shrink-0"
+                      />
+                    )}
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2 mb-1.5">
                         <p className="text-sm font-semibold text-neutral-800">{mod.title}</p>
@@ -85,7 +95,6 @@ export function ParticipantProgress() {
                         {prog?.completedAt && ` · Completed ${formatDate(prog.completedAt)}`}
                       </p>
                     </div>
-
                   </div>
 
                   {/* Quiz review link */}
@@ -108,25 +117,6 @@ export function ParticipantProgress() {
 
         {/* Right: completion ring + goals + quiz scores */}
         <div className="flex flex-col gap-6">
-          <Card className="text-center">
-            <p className="text-sm font-medium text-neutral-700 mb-4">Overall Completion</p>
-            <div className="flex justify-center mb-3">
-              <div className="relative">
-                <CircleProgress
-                  value={Math.round((completedMods / publishedMods.length) * 100)}
-                  size={120}
-                />
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-2xl font-bold text-neutral-900">
-                    {Math.round((completedMods / publishedMods.length) * 100)}%
-                  </span>
-                  <span className="text-xs text-neutral-400">{completedMods}/{publishedMods.length}</span>
-                </div>
-              </div>
-            </div>
-            <p className="text-xs text-neutral-400">modules completed</p>
-          </Card>
-
           {/* Goal-setting card */}
           {(() => {
             const goalEntries = goalsStore.getForUser(user.id);
@@ -195,6 +185,7 @@ export function ParticipantProgress() {
           )}
         </div>
       </div>
+
     </ParticipantShell>
   );
 }

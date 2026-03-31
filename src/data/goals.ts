@@ -13,7 +13,7 @@ export const GOAL_CONFIGS: GoalConfig[] = [
   {
     moduleId: 'mod-1',
     moduleTitle: 'Feeding Your Baby',
-    programLabel: 'HEALTHY MOM, HEALTHY FAMILY',
+    programLabel: 'Feeding Your Baby',
     intro:
       "Now that you've explored this topic, take a moment to think about what changes you'd like to make for you and your baby. Setting small, realistic goals can help you build healthy habits over time.",
     instructions:
