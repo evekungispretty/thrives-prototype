@@ -1,4 +1,4 @@
-import { CheckCircle2, Clock, Trophy, BookOpen, ArrowRight } from 'lucide-react';
+import { CheckCircle2, Clock, Trophy, BookOpen, ArrowRight, Target } from 'lucide-react';
 import { Link } from 'wouter';
 import { ParticipantShell } from '../../components/layout/ParticipantShell';
 import { Card } from '../../components/ui/Card';
@@ -7,7 +7,9 @@ import { TopicBadge, ModuleStatusBadge } from '../../components/ui/Badge';
 import { MODULES } from '../../data/modules';
 import { DEMO_PARTICIPANT } from '../../data/users';
 import { quizStore } from '../../stores/quizStore';
+import { goalsStore } from '../../stores/goalsStore';
 import { QUESTIONS } from '../../data/questions';
+import { GOAL_CONFIGS } from '../../data/goals';
 
 export function ParticipantProgress() {
   const user = DEMO_PARTICIPANT;
@@ -104,7 +106,7 @@ export function ParticipantProgress() {
           </div>
         </div>
 
-        {/* Right: completion ring */}
+        {/* Right: completion ring + goals + quiz scores */}
         <div className="flex flex-col gap-6">
           <Card className="text-center">
             <p className="text-sm font-medium text-neutral-700 mb-4">Overall Completion</p>
@@ -124,6 +126,48 @@ export function ParticipantProgress() {
             </div>
             <p className="text-xs text-neutral-400">modules completed</p>
           </Card>
+
+          {/* Goal-setting card */}
+          {(() => {
+            const goalEntries = goalsStore.getForUser(user.id);
+            const hasGoals = goalEntries.length > 0;
+            const mod1Config = GOAL_CONFIGS.find(g => g.moduleId === 'mod-1');
+            if (!mod1Config && !hasGoals) return null;
+            const mod1 = MODULES.find(m => m.id === 'mod-1');
+            return (
+              <Card>
+                <div className="flex items-center gap-2 mb-3">
+                  <Target size={15} className="text-brand-navy" />
+                  <h3 className="text-sm font-semibold text-neutral-800">My Goals</h3>
+                </div>
+                {hasGoals ? (
+                  <>
+                    <p className="text-xs text-neutral-500 mb-3">
+                      You have goals set for {goalEntries.length} module{goalEntries.length > 1 ? 's' : ''}.
+                    </p>
+                    <Link
+                      href="/participant/goals"
+                      className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-navy hover:text-brand-navy-dark transition-colors"
+                    >
+                      View my goals <ArrowRight size={12} />
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-xs text-neutral-500 mb-3">
+                      Set your goals for <span className="font-medium">{mod1?.title}</span> to track your progress here.
+                    </p>
+                    <Link
+                      href="/participant/modules/mod-1/goals"
+                      className="inline-flex items-center gap-1.5 text-xs font-medium text-brand-navy hover:text-brand-navy-dark transition-colors"
+                    >
+                      Set goals <ArrowRight size={12} />
+                    </Link>
+                  </>
+                )}
+              </Card>
+            );
+          })()}
 
           {/* Quiz score summary */}
           {quizResults.length > 0 && (

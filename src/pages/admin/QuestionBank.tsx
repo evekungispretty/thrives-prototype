@@ -108,6 +108,32 @@ function genQId() { return `q-new-${++_nextQId}`; }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+/** Convert a datetime-local string (YYYY-MM-DDTHH:mm) to display format (e.g. "Apr 15 at 12:30pm") */
+function datetimeLocalToDisplay(value: string): string {
+  if (!value) return '';
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return value;
+  const month = d.toLocaleString('en-US', { month: 'short' });
+  const day = d.getDate();
+  const hours = d.getHours();
+  const mins = d.getMinutes();
+  const ampm = hours >= 12 ? 'pm' : 'am';
+  const h = hours % 12 || 12;
+  const minStr = mins === 0 ? '' : `:${String(mins).padStart(2, '0')}`;
+  return `${month} ${day} at ${h}${minStr}${ampm}`;
+}
+
+/** Convert a display string like "Apr 15 at 12:30pm" to datetime-local (YYYY-MM-DDTHH:mm) */
+function displayToDatetimeLocal(value: string): string {
+  if (!value) return '';
+  // If already in datetime-local format, return as-is
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return value;
+  const d = new Date(value.replace(' at ', ' '));
+  if (isNaN(d.getTime())) return '';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 function statusLine(quiz: Quiz): string {
   if (quiz.status === 'closed')      return 'Closed';
   if (quiz.status === 'unavailable') return quiz.availableFrom ? `Not available until ${quiz.availableFrom}` : 'Not yet available';
@@ -172,7 +198,7 @@ export function QuestionBank() {
     setQuizForm({
       title: quiz.title, moduleId: quiz.moduleId ?? '',
       status: quiz.status,
-      availableFrom: quiz.availableFrom ?? '', dueAt: quiz.dueAt ?? '',
+      availableFrom: displayToDatetimeLocal(quiz.availableFrom ?? ''), dueAt: displayToDatetimeLocal(quiz.dueAt ?? ''),
       timeLimitMinutes: quiz.timeLimitMinutes ? String(quiz.timeLimitMinutes) : '',
       totalPoints: String(quiz.totalPoints),
     });
@@ -186,8 +212,8 @@ export function QuestionBank() {
       title: quizForm.title.trim(),
       moduleId: quizForm.moduleId || undefined,
       status: quizForm.status,
-      availableFrom: quizForm.availableFrom.trim() || undefined,
-      dueAt: quizForm.dueAt.trim() || undefined,
+      availableFrom: quizForm.availableFrom ? datetimeLocalToDisplay(quizForm.availableFrom) : undefined,
+      dueAt: quizForm.dueAt ? datetimeLocalToDisplay(quizForm.dueAt) : undefined,
       timeLimitMinutes: quizForm.timeLimitMinutes ? Number(quizForm.timeLimitMinutes) : undefined,
       totalPoints: Number(quizForm.totalPoints) || 10,
     };
@@ -526,8 +552,8 @@ export function QuestionBank() {
           <Select label="Assign to Module" value={quizForm.moduleId} onChange={e => setQuizForm(f => ({ ...f, moduleId: e.target.value }))} options={moduleOptions} />
           <Select label="Status" value={quizForm.status} onChange={e => setQuizForm(f => ({ ...f, status: e.target.value as QuizStatus }))} options={QUIZ_STATUS_OPTIONS} />
           <div className="grid grid-cols-2 gap-4">
-            <Input label="Available From" value={quizForm.availableFrom} onChange={e => setQuizForm(f => ({ ...f, availableFrom: e.target.value }))} placeholder="e.g. Apr 15 at 12:30pm" />
-            <Input label="Due At" value={quizForm.dueAt} onChange={e => setQuizForm(f => ({ ...f, dueAt: e.target.value }))} placeholder="e.g. Feb 4 at 8pm" />
+            <Input label="Available From" type="datetime-local" value={quizForm.availableFrom} onChange={e => setQuizForm(f => ({ ...f, availableFrom: e.target.value }))} />
+            <Input label="Due At" type="datetime-local" value={quizForm.dueAt} onChange={e => setQuizForm(f => ({ ...f, dueAt: e.target.value }))} />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <Input label="Time Limit (minutes)" type="number" value={quizForm.timeLimitMinutes} onChange={e => setQuizForm(f => ({ ...f, timeLimitMinutes: e.target.value }))} placeholder="No limit" min={1} />

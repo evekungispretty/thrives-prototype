@@ -1,5 +1,5 @@
 import { Link } from 'wouter';
-import { ArrowRight, CheckCircle2, Clock, PlayCircle, Star } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Target } from 'lucide-react';
 import { ParticipantShell } from '../../components/layout/ParticipantShell';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
@@ -7,6 +7,8 @@ import { ProgressBar, CircleProgress } from '../../components/ui/ProgressBar';
 import { TopicBadge } from '../../components/ui/Badge';
 import { MODULES } from '../../data/modules';
 import { DEMO_PARTICIPANT } from '../../data/users';
+import { goalsStore } from '../../stores/goalsStore';
+import { GOAL_CONFIGS } from '../../data/goals';
 
 export function ParticipantDashboard() {
   const user = DEMO_PARTICIPANT;
@@ -21,8 +23,6 @@ export function ParticipantDashboard() {
     : null;
 
   const overallPct = Math.round((completedModules / totalModules) * 100);
-  const completedLessons = user.progress.reduce((sum, p) => sum + p.completedLessons, 0);
-  const totalLessons = MODULES.reduce((sum, m) => sum + m.lessons.length, 0);
 
   // Recent activity (last 3 completed modules)
   const recentCompletions = user.progress
@@ -45,20 +45,39 @@ export function ParticipantDashboard() {
         </p>
       </div>
 
-      {/* Stats row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-        {[
-          { label: 'Modules Completed', value: `${completedModules}/${totalModules}`, icon: <CheckCircle2 size={18} />, color: 'green' },
-          { label: 'Lessons Done', value: `${completedLessons}/${totalLessons}`, icon: <PlayCircle size={18} />, color: 'amber' },
-          { label: 'Overall Progress', value: `${overallPct}%`, icon: <Star size={18} />, color: 'blue' },
-          { label: 'Current Streak', value: '5 days', icon: <Clock size={18} />, color: 'purple' },
-        ].map(stat => (
-          <Card key={stat.label}>
-            <p className="text-xs text-neutral-500 font-medium">{stat.label}</p>
-            <p className="mt-1 text-xl font-bold text-neutral-900">{stat.value}</p>
+      {/* Goals prompt */}
+      {(() => {
+        const goalEntries = goalsStore.getForUser(user.id);
+        const hasGoals = goalEntries.length > 0;
+        const firstConfig = GOAL_CONFIGS[0];
+        return (
+          <Card className="mb-8 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-brand-navy flex items-center justify-center flex-shrink-0">
+                <Target size={16} className="text-white" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-neutral-800">
+                  {hasGoals ? 'My Goals' : 'Set your goals'}
+                </p>
+                <p className="text-xs text-neutral-500 mt-0.5">
+                  {hasGoals
+                    ? `You have goals set for ${goalEntries.length} module${goalEntries.length > 1 ? 's' : ''}`
+                    : firstConfig
+                      ? `Set goals for ${MODULES.find(m => m.id === firstConfig.moduleId)?.title ?? firstConfig.moduleTitle}`
+                      : 'Track your progress with personal goals'}
+                </p>
+              </div>
+            </div>
+            <Link
+              href={hasGoals ? '/participant/goals' : `/participant/modules/${firstConfig?.moduleId ?? 'mod-1'}/goals`}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-navy hover:text-brand-navy-dark transition-colors flex-shrink-0"
+            >
+              {hasGoals ? 'View goals' : 'Get started'} <ArrowRight size={14} />
+            </Link>
           </Card>
-        ))}
-      </div>
+        );
+      })()}
 
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Continue Learning CTA */}

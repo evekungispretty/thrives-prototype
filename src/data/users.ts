@@ -37,7 +37,7 @@ export const DEMO_PARTICIPANT: User = {
   name: 'Maria Santos',
   email: 'maria.santos@email.com',
   role: 'participant',
-  cohort: 'Spring 2024 — Alachua County',
+  cohort: 'Spring 2025 — Alachua County',
   status: 'active',
   enrolledAt: '2024-01-15',
   lastActiveAt: '2024-03-20',

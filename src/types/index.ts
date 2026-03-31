@@ -122,6 +122,24 @@ export interface User {
   notes?: string;
 }
 
+// ─── Goals ───────────────────────────────────────────────────────────────────
+
+export interface GoalAttempt {
+  id: string;
+  userId: string;
+  moduleId: string;
+  completedAt: string;
+  // Step 1: goal selection
+  selectedGoals: string[];
+  customGoal?: string;
+  // Step 2: action plan
+  steps: string;
+  startDate: string;
+  // Step 3: obstacles
+  challenges: string;
+  overcome: string;
+}
+
 // ─── App state ────────────────────────────────────────────────────────────────
 
 export interface AppState {
