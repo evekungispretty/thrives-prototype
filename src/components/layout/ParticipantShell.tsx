@@ -27,7 +27,10 @@ export function ParticipantShell({ children }: { children: React.ReactNode }) {
           {/* Nav */}
           <nav className="hidden sm:flex items-center gap-1">
             {NAV_LINKS.map(({ href, label, icon: Icon }) => {
-              const active = location.startsWith(href);
+              const isQuizReview = /\/participant\/modules\/[^/]+\/quiz\/review/.test(location);
+              const active = isQuizReview
+                ? href === '/participant/progress'
+                : location.startsWith(href);
               return (
                 <Link
                   key={href}
