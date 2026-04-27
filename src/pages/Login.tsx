@@ -43,13 +43,12 @@ export function Login() {
           </div>
 
           <p className="mt-5 text-xs text-neutral-400 text-center leading-relaxed">
-            Portfolio prototype — no credentials required.
             <br />Built to demonstrate the THRIVES learning system.
           </p>
         </div>
 
         <p className="text-center text-xs text-neutral-400 mt-6">
-          University of Florida · College of Education · THRIVES Program
+          University of Florida · College of Education
         </p>
       </div>
     </div>
