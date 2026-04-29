@@ -174,6 +174,9 @@ export function QuestionBank() {
   const [qForm, setQForm]                 = useState<QForm>(BLANK_Q_FORM);
   const [qDeleteId, setQDeleteId]         = useState<{ quizId: string; qId: string } | null>(null);
 
+  // Drag-to-reorder state
+  const [dragState, setDragState] = useState<{ quizId: string; fromIdx: number; overIdx: number } | null>(null);
+
   // ── Derived ──────────────────────────────────────────────────────────────
 
   const filtered = quizzes.filter(q =>
@@ -291,6 +294,30 @@ export function QuestionBank() {
     const { quizId, qId } = qDeleteId;
     setQByQuiz(m => ({ ...m, [quizId]: (m[quizId] ?? []).filter(q => q.id !== qId) }));
     setQDeleteId(null);
+  };
+
+  // ── Drag-to-reorder handlers ───────────────────────────────────────────────
+
+  const handleDragStart = (quizId: string, fromIdx: number) =>
+    setDragState({ quizId, fromIdx, overIdx: fromIdx });
+
+  const handleDragOver = (e: React.DragEvent, quizId: string, overIdx: number) => {
+    e.preventDefault();
+    setDragState(s => s && s.quizId === quizId ? { ...s, overIdx } : s);
+  };
+
+  const handleDrop = (quizId: string) => {
+    if (!dragState || dragState.quizId !== quizId || dragState.fromIdx === dragState.overIdx) {
+      setDragState(null);
+      return;
+    }
+    setQByQuiz(m => {
+      const qs = [...(m[quizId] ?? [])];
+      const [moved] = qs.splice(dragState.fromIdx, 1);
+      qs.splice(dragState.overIdx, 0, moved);
+      return { ...m, [quizId]: qs.map((q, i) => ({ ...q, order: i + 1 })) };
+    });
+    setDragState(null);
   };
 
   // ── Question form helpers ──────────────────────────────────────────────────
@@ -437,11 +464,24 @@ export function QuestionBank() {
                         <p className="text-sm text-neutral-400 py-2 text-center">No questions yet. Add one below.</p>
                       )}
 
-                      {questions.map((q, idx) => (
-                        <div key={q.id} className="border border-neutral-200 rounded-xl overflow-hidden bg-white group/q shadow-sm">
+                      {questions.map((q, idx) => {
+                        const isDragging = dragState?.quizId === quiz.id && dragState.fromIdx === idx;
+                        const isOver = dragState?.quizId === quiz.id && dragState.overIdx === idx && dragState.fromIdx !== idx;
+                        return (
+                        <div
+                          key={q.id}
+                          draggable
+                          onDragStart={() => handleDragStart(quiz.id, idx)}
+                          onDragOver={e => handleDragOver(e, quiz.id, idx)}
+                          onDrop={() => handleDrop(quiz.id)}
+                          onDragEnd={() => setDragState(null)}
+                          className={`border rounded-xl overflow-hidden bg-white group/q shadow-sm transition-all ${
+                            isDragging ? 'opacity-40' : 'opacity-100'
+                          } ${isOver ? 'border-brand-navy ring-2 ring-brand-navy/20' : 'border-neutral-200'}`}
+                        >
                           {/* Canvas-style question header */}
                           <div className="flex items-center gap-3 px-4 py-2.5 bg-neutral-100 border-b border-neutral-200">
-                            <GripVertical size={15} className="text-neutral-400 flex-shrink-0 cursor-grab" />
+                            <GripVertical size={15} className="text-neutral-400 flex-shrink-0 cursor-grab active:cursor-grabbing" />
                             <span className="text-sm font-semibold text-neutral-700 flex-1">
                               Question {idx + 1}
                               <span className="ml-2 text-xs font-normal text-neutral-400">{QUESTION_TYPE_LABELS[q.type]}</span>
@@ -508,7 +548,8 @@ export function QuestionBank() {
                             )}
                           </div>
                         </div>
-                      ))}
+                        );
+                      })}
 
                       <button
                         onClick={() => openAddQuestion(quiz.id)}
