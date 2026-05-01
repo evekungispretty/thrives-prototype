@@ -3,6 +3,7 @@ import {
   Search, Plus, MoreVertical, Rocket, ChevronDown, ChevronRight,
   Edit2, Trash2, Copy, Check, GripVertical, CheckCircle2, X,
 } from 'lucide-react';
+import { useLocation } from 'wouter';
 import { AdminShell } from '../../components/layout/AdminShell';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
@@ -32,26 +33,6 @@ const INITIAL_QUIZZES: Quiz[] = [
   { id: 'quiz-2',   title: 'Quiz 2',               status: 'closed',      moduleId: 'mod-2', dueAt: 'Mar 9 at 9pm',      totalPoints: 10, completed: true  },
   { id: 'quiz-3',   title: 'Quiz 3',               status: 'unavailable', moduleId: 'mod-3', availableFrom: 'Apr 15 at 12:30pm', dueAt: 'Apr 15 at 1:30pm', totalPoints: 10, completed: true },
   { id: 'quiz-inf', title: 'Infant Feeding Quiz',  status: 'closed',      moduleId: 'mod-1', dueAt: 'Feb 28 at 11:59pm', totalPoints: 10, completed: true  },
-];
-
-// ─── Quiz form ────────────────────────────────────────────────────────────────
-
-interface QuizForm {
-  title: string; moduleId: string; status: QuizStatus;
-  availableFrom: string; dueAt: string;
-  timeLimitMinutes: string; totalPoints: string;
-}
-
-const EMPTY_QUIZ_FORM: QuizForm = {
-  title: '', moduleId: '', status: 'draft',
-  availableFrom: '', dueAt: '', timeLimitMinutes: '', totalPoints: '10',
-};
-
-const QUIZ_STATUS_OPTIONS = [
-  { value: 'published',   label: 'Published' },
-  { value: 'draft',       label: 'Draft' },
-  { value: 'closed',      label: 'Closed' },
-  { value: 'unavailable', label: 'Not Yet Available' },
 ];
 
 // ─── Question form ────────────────────────────────────────────────────────────
@@ -108,32 +89,6 @@ function genQId() { return `q-new-${++_nextQId}`; }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Convert a datetime-local string (YYYY-MM-DDTHH:mm) to display format (e.g. "Apr 15 at 12:30pm") */
-function datetimeLocalToDisplay(value: string): string {
-  if (!value) return '';
-  const d = new Date(value);
-  if (isNaN(d.getTime())) return value;
-  const month = d.toLocaleString('en-US', { month: 'short' });
-  const day = d.getDate();
-  const hours = d.getHours();
-  const mins = d.getMinutes();
-  const ampm = hours >= 12 ? 'pm' : 'am';
-  const h = hours % 12 || 12;
-  const minStr = mins === 0 ? '' : `:${String(mins).padStart(2, '0')}`;
-  return `${month} ${day} at ${h}${minStr}${ampm}`;
-}
-
-/** Convert a display string like "Apr 15 at 12:30pm" to datetime-local (YYYY-MM-DDTHH:mm) */
-function displayToDatetimeLocal(value: string): string {
-  if (!value) return '';
-  // If already in datetime-local format, return as-is
-  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return value;
-  const d = new Date(value.replace(' at ', ' '));
-  if (isNaN(d.getTime())) return '';
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
 function statusLine(quiz: Quiz): string {
   if (quiz.status === 'closed')      return 'Closed';
   if (quiz.status === 'unavailable') return quiz.availableFrom ? `Not available until ${quiz.availableFrom}` : 'Not yet available';
@@ -154,6 +109,7 @@ function seedQuestions(): Record<string, Question[]> {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function QuestionBank() {
+  const [, navigate] = useLocation();
   const [quizzes, setQuizzes]             = useState<Quiz[]>(INITIAL_QUIZZES);
   const [questionsByQuiz, setQByQuiz]     = useState<Record<string, Question[]>>(seedQuestions);
   const [search, setSearch]               = useState('');
@@ -161,11 +117,6 @@ export function QuestionBank() {
   const [expandedQuizId, setExpandedQuizId] = useState<string | null>(null);
   const [activeKebab, setActiveKebab]     = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
-
-  // Quiz modal
-  const [quizModalOpen, setQuizModalOpen] = useState(false);
-  const [editingQuizId, setEditingQuizId] = useState<string | null>(null);
-  const [quizForm, setQuizForm]           = useState<QuizForm>(EMPTY_QUIZ_FORM);
 
   // Question modal
   const [qModalOpen, setQModalOpen]       = useState(false);
@@ -183,52 +134,8 @@ export function QuestionBank() {
     !search || q.title.toLowerCase().includes(search.toLowerCase())
   );
 
-  const moduleOptions = [
-    { value: '', label: 'None (unassigned)' },
-    ...MODULES.map(m => ({ value: m.id, label: m.title })),
-  ];
 
   // ── Quiz handlers ─────────────────────────────────────────────────────────
-
-  const openCreateQuiz = () => {
-    setEditingQuizId(null);
-    setQuizForm(EMPTY_QUIZ_FORM);
-    setQuizModalOpen(true);
-  };
-
-  const openEditQuiz = (quiz: Quiz) => {
-    setEditingQuizId(quiz.id);
-    setQuizForm({
-      title: quiz.title, moduleId: quiz.moduleId ?? '',
-      status: quiz.status,
-      availableFrom: displayToDatetimeLocal(quiz.availableFrom ?? ''), dueAt: displayToDatetimeLocal(quiz.dueAt ?? ''),
-      timeLimitMinutes: quiz.timeLimitMinutes ? String(quiz.timeLimitMinutes) : '',
-      totalPoints: String(quiz.totalPoints),
-    });
-    setActiveKebab(null);
-    setQuizModalOpen(true);
-  };
-
-  const handleSaveQuiz = () => {
-    if (!quizForm.title.trim()) return;
-    const patch = {
-      title: quizForm.title.trim(),
-      moduleId: quizForm.moduleId || undefined,
-      status: quizForm.status,
-      availableFrom: quizForm.availableFrom ? datetimeLocalToDisplay(quizForm.availableFrom) : undefined,
-      dueAt: quizForm.dueAt ? datetimeLocalToDisplay(quizForm.dueAt) : undefined,
-      timeLimitMinutes: quizForm.timeLimitMinutes ? Number(quizForm.timeLimitMinutes) : undefined,
-      totalPoints: Number(quizForm.totalPoints) || 10,
-    };
-    if (editingQuizId) {
-      setQuizzes(qs => qs.map(q => q.id === editingQuizId ? { ...q, ...patch } : q));
-    } else {
-      const newId = `quiz-${Date.now()}`;
-      setQuizzes(qs => [...qs, { ...patch, id: newId, completed: false }]);
-      setQByQuiz(m => ({ ...m, [newId]: [] }));
-    }
-    setQuizModalOpen(false);
-  };
 
   const handleDuplicateQuiz = (quiz: Quiz) => {
     const newId = `quiz-${Date.now()}`;
@@ -373,10 +280,7 @@ export function QuestionBank() {
           />
         </div>
         <div className="flex-1" />
-        <Button onClick={openCreateQuiz}><Plus size={15} /> Quiz/Survey</Button>
-        <button className="w-9 h-9 rounded-lg border border-neutral-200 hover:bg-neutral-50 flex items-center justify-center text-neutral-500 transition-colors">
-          <MoreVertical size={16} />
-        </button>
+        <Button onClick={() => navigate('/admin/quizzes/new')}><Plus size={15} /> Quiz/Survey</Button>
       </div>
 
       {/* Assignment Quizzes section */}
@@ -412,7 +316,12 @@ export function QuestionBank() {
                     <Rocket size={17} className="text-brand-navy flex-shrink-0 ml-1" strokeWidth={1.75} />
 
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-neutral-900">{quiz.title}</p>
+                      <button
+                        onClick={e => { e.stopPropagation(); navigate(`/admin/quizzes/${quiz.id}/edit`); }}
+                        className="text-sm font-semibold text-neutral-900 hover:text-brand-navy transition-colors text-left"
+                      >
+                        {quiz.title}
+                      </button>
                       <div className="flex flex-wrap items-center gap-x-3 mt-0.5 text-xs text-neutral-500">
                         <span className={quiz.status === 'unavailable' ? 'font-medium text-neutral-700' : ''}>
                           {statusLine(quiz)}
@@ -442,7 +351,7 @@ export function QuestionBank() {
                       </button>
                       {kebabOpen && (
                         <div className="absolute right-0 top-9 bg-white rounded-xl shadow-lg border border-neutral-200 py-1 w-44">
-                          <button onClick={() => openEditQuiz(quiz)} className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors">
+                          <button onClick={() => { setActiveKebab(null); navigate(`/admin/quizzes/${quiz.id}/edit`); }} className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors">
                             <Edit2 size={13} /> Edit Quiz Settings
                           </button>
                           <button onClick={() => handleDuplicateQuiz(quiz)} className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors">
@@ -583,27 +492,6 @@ export function QuestionBank() {
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={() => setQDeleteId(null)}>Cancel</Button>
           <Button variant="danger" onClick={handleDeleteQuestion}>Delete</Button>
-        </div>
-      </Modal>
-
-      {/* Create / Edit Quiz */}
-      <Modal open={quizModalOpen} onClose={() => setQuizModalOpen(false)} title={editingQuizId ? 'Edit Quiz Settings' : 'New Quiz'} size="md">
-        <div className="flex flex-col gap-4 max-h-[70vh] overflow-y-auto pr-1">
-          <Input label="Quiz Title" value={quizForm.title} onChange={e => setQuizForm(f => ({ ...f, title: e.target.value }))} placeholder="e.g. Module 1 Quiz" />
-          <Select label="Assign to Module" value={quizForm.moduleId} onChange={e => setQuizForm(f => ({ ...f, moduleId: e.target.value }))} options={moduleOptions} />
-          <Select label="Status" value={quizForm.status} onChange={e => setQuizForm(f => ({ ...f, status: e.target.value as QuizStatus }))} options={QUIZ_STATUS_OPTIONS} />
-          <div className="grid grid-cols-2 gap-4">
-            <Input label="Available From" type="datetime-local" value={quizForm.availableFrom} onChange={e => setQuizForm(f => ({ ...f, availableFrom: e.target.value }))} />
-            <Input label="Due At" type="datetime-local" value={quizForm.dueAt} onChange={e => setQuizForm(f => ({ ...f, dueAt: e.target.value }))} />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <Input label="Time Limit (minutes)" type="number" value={quizForm.timeLimitMinutes} onChange={e => setQuizForm(f => ({ ...f, timeLimitMinutes: e.target.value }))} placeholder="No limit" min={1} />
-            <Input label="Total Points" type="number" value={quizForm.totalPoints} onChange={e => setQuizForm(f => ({ ...f, totalPoints: e.target.value }))} min={0} />
-          </div>
-        </div>
-        <div className="flex justify-end gap-2 pt-4 mt-4 border-t border-neutral-100">
-          <Button variant="ghost" onClick={() => setQuizModalOpen(false)}>Cancel</Button>
-          <Button onClick={handleSaveQuiz} disabled={!quizForm.title.trim()}>{editingQuizId ? 'Save Changes' : 'Create Quiz'}</Button>
         </div>
       </Modal>
 

@@ -21,6 +21,8 @@ import { UserManagement } from './pages/admin/UserManagement';
 import { ParticipantDetail } from './pages/admin/ParticipantDetail';
 import { QuestionBank } from './pages/admin/QuestionBank';
 import { ContentManagement } from './pages/admin/ContentManagement';
+import { ModuleEditor } from './pages/admin/ModuleEditor';
+import { QuizEditor } from './pages/admin/QuizEditor';
 import { ResearchReport } from './pages/admin/ResearchReport';
 
 export default function App() {
@@ -47,6 +49,9 @@ export default function App() {
       <Route path="/admin/users" component={UserManagement} />
       <Route path="/admin/questions" component={QuestionBank} />
       <Route path="/admin/content" component={ContentManagement} />
+      <Route path="/admin/modules/:id/edit" component={ModuleEditor} />
+      <Route path="/admin/quizzes/new" component={QuizEditor} />
+      <Route path="/admin/quizzes/:id/edit" component={QuizEditor} />
       <Route path="/admin/research" component={ResearchReport} />
 
       {/* Fallback */}

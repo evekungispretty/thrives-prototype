@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { BarChart2, Users, CheckCircle2, TrendingUp, Download } from 'lucide-react';
+import { BarChart2, Users, CheckCircle2, TrendingUp, Download, ChevronDown } from 'lucide-react';
 import { AdminShell } from '../../components/layout/AdminShell';
 import { Card } from '../../components/ui/Card';
 import { QUESTIONS } from '../../data/questions';
@@ -82,27 +82,33 @@ export function ResearchReport() {
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1">
             <label className="text-xs font-medium text-neutral-500 mb-1 block">Module</label>
-            <select
-              value={moduleFilter}
-              onChange={e => setModuleFilter(e.target.value)}
-              className="h-9 w-full rounded-lg border border-neutral-300 px-3 text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-navy"
-            >
-              {MODULES.filter(m => m.publishState === 'published').map(m => (
-                <option key={m.id} value={m.id}>{m.title}</option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                value={moduleFilter}
+                onChange={e => setModuleFilter(e.target.value)}
+                className="h-9 w-full rounded-lg border border-neutral-300 pl-3 pr-8 text-sm text-neutral-700 bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-brand-navy"
+              >
+                {MODULES.filter(m => m.publishState === 'published').map(m => (
+                  <option key={m.id} value={m.id}>{m.title}</option>
+                ))}
+              </select>
+              <ChevronDown size={15} className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-500" />
+            </div>
           </div>
           <div className="flex-1">
             <label className="text-xs font-medium text-neutral-500 mb-1 block">Cohort</label>
-            <select
-              value={cohortFilter}
-              onChange={e => setCohortFilter(e.target.value)}
-              className="h-9 w-full rounded-lg border border-neutral-300 px-3 text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-navy"
-            >
-              {cohorts.map(c => (
-                <option key={c} value={c}>{c === 'all' ? 'All Cohorts' : c}</option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                value={cohortFilter}
+                onChange={e => setCohortFilter(e.target.value)}
+                className="h-9 w-full rounded-lg border border-neutral-300 pl-3 pr-8 text-sm text-neutral-700 bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-brand-navy"
+              >
+                {cohorts.map(c => (
+                  <option key={c} value={c}>{c === 'all' ? 'All Cohorts' : c}</option>
+                ))}
+              </select>
+              <ChevronDown size={15} className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-500" />
+            </div>
           </div>
         </div>
       </Card>

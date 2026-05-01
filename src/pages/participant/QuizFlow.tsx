@@ -1,6 +1,6 @@
 import { useParams, useLocation } from 'wouter';
 import { useState, useRef } from 'react';
-import { CheckCircle2, XCircle, ArrowRight, RotateCcw, Trophy } from 'lucide-react';
+import { CheckCircle2, XCircle, ArrowRight, RotateCcw, Trophy, ChevronDown } from 'lucide-react';
 import { ParticipantShell } from '../../components/layout/ParticipantShell';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
@@ -261,18 +261,20 @@ export function QuizFlow() {
                   <div className="flex flex-col gap-2">
                     <p className="text-xs font-medium text-neutral-500 mb-1">Match</p>
                     {currentQ.pairs.map((pair) => (
-                      <select
-                        key={pair.id}
-                        value={matchSelections[pair.id] ?? ''}
-                        disabled={submitted}
-                        onChange={e => setMatchSelections(prev => ({ ...prev, [pair.id]: e.target.value }))}
-                        className="p-2 rounded-xl border-2 border-neutral-200 text-sm focus:border-brand-navy focus:outline-none bg-white min-h-10"
-                      >
-                        <option value="">Select…</option>
-                        {shuffledRights.map(r => (
-                          <option key={r} value={r}>{r}</option>
-                        ))}
-                      </select>
+                      <div key={pair.id} className="relative">
+                        <select
+                          value={matchSelections[pair.id] ?? ''}
+                          disabled={submitted}
+                          onChange={e => setMatchSelections(prev => ({ ...prev, [pair.id]: e.target.value }))}
+                          className="w-full pl-3 pr-8 py-2 rounded-lg border-2 border-neutral-200 text-sm focus:border-brand-navy focus:outline-none bg-white min-h-10 appearance-none"
+                        >
+                          <option value="">Select…</option>
+                          {shuffledRights.map(r => (
+                            <option key={r} value={r}>{r}</option>
+                          ))}
+                        </select>
+                        <ChevronDown size={15} className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-500" />
+                      </div>
                     ))}
                   </div>
                 </div>

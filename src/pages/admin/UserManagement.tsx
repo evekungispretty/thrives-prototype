@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Plus, MoreHorizontal, ChevronRight } from 'lucide-react';
+import { Search, Plus, MoreHorizontal, ChevronRight, ChevronDown } from 'lucide-react';
 import { Link } from 'wouter';
 import { AdminShell } from '../../components/layout/AdminShell';
 import { Card } from '../../components/ui/Card';
@@ -82,20 +82,26 @@ export function UserManagement() {
               className="h-9 w-full rounded-lg border border-neutral-300 pl-9 pr-3 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand-navy focus:border-brand-navy"
             />
           </div>
-          <select
-            value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value)}
-            className="h-9 rounded-lg border border-neutral-300 px-3 text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-navy"
-          >
-            {STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-          </select>
-          <select
-            value={cohortFilter}
-            onChange={e => setCohortFilter(e.target.value)}
-            className="h-9 rounded-lg border border-neutral-300 px-3 text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-navy"
-          >
-            {COHORTS.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
+          <div className="relative">
+            <select
+              value={statusFilter}
+              onChange={e => setStatusFilter(e.target.value)}
+              className="h-9 rounded-lg border border-neutral-300 pl-3 pr-8 text-sm text-neutral-700 bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-brand-navy"
+            >
+              {STATUSES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+            </select>
+            <ChevronDown size={15} className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-500" />
+          </div>
+          <div className="relative">
+            <select
+              value={cohortFilter}
+              onChange={e => setCohortFilter(e.target.value)}
+              className="h-9 rounded-lg border border-neutral-300 pl-3 pr-8 text-sm text-neutral-700 bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-brand-navy"
+            >
+              {COHORTS.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <ChevronDown size={15} className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-500" />
+          </div>
         </div>
       </Card>
 

@@ -1,152 +1,40 @@
-import { useState } from 'react';
-import { ChevronDown, ChevronRight, Plus, Edit2, Eye, EyeOff, GripVertical, BookOpen, Clock, FileQuestion, Trash2, ChevronUp, ImageIcon, ExternalLink, Tag } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { ChevronDown, ChevronRight, Plus, Edit2, Eye, EyeOff, GripVertical, BookOpen, Clock, FileQuestion, ImageIcon, CheckCircle } from 'lucide-react';
+import { useLocation } from 'wouter';
 import { AdminShell } from '../../components/layout/AdminShell';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
-import { Modal } from '../../components/ui/Modal';
-import { Input, Select, Textarea } from '../../components/ui/Input';
 import { TopicBadge } from '../../components/ui/Badge';
-import { MODULES } from '../../data/modules';
-import type { Lesson, Module, TopicTag } from '../../types';
-
-const TOPIC_OPTIONS: { value: TopicTag; label: string }[] = [
-  { value: 'infant-feeding',      label: 'Infant Feeding' },
-  { value: 'tummy-time',          label: 'Tummy Time' },
-  { value: 'screen-time',         label: 'Screen Time' },
-  { value: 'sleep',               label: 'Sleep' },
-  { value: 'development',         label: 'Development' },
-  { value: 'caregiver-wellbeing', label: 'Caregiver Wellbeing' },
-];
-
-const PUBLISH_OPTIONS = [
-  { value: 'draft',     label: 'Draft' },
-  { value: 'published', label: 'Published' },
-];
-
-// ─── Module form ──────────────────────────────────────────────────────────────
-
-interface ModuleFormState {
-  title: string;
-  description: string;
-  tag: TopicTag;
-  estimatedMinutes: string;
-  publishState: 'published' | 'draft';
-  thumbnail: string;
-}
-
-const EMPTY_FORM: ModuleFormState = {
-  title: '',
-  description: '',
-  tag: 'infant-feeding',
-  estimatedMinutes: '30',
-  publishState: 'draft',
-  thumbnail: '',
-};
-
-function moduleToForm(mod: Module): ModuleFormState {
-  return {
-    title: mod.title,
-    description: mod.description,
-    tag: mod.tag,
-    estimatedMinutes: String(mod.estimatedMinutes),
-    publishState: mod.publishState,
-    thumbnail: mod.thumbnail ?? '',
-  };
-}
-
-// ─── Lesson draft ─────────────────────────────────────────────────────────────
-
-interface ResourceDraft {
-  label: string;
-  url: string;
-}
-
-interface LessonDraft {
-  _key: string; // stable React key (id for existing, temp id for new)
-  id: string;
-  title: string;
-  description: string;
-  durationMinutes: string;
-  videoUrl: string;
-  videoThumb: string;       // hex color for placeholder background
-  bodyContent: string;      // HTML shown in lesson body
-  topics: string;           // comma-separated → string[]
-  resources: ResourceDraft[];
-  _original?: Lesson;
-}
-
-function lessonToDraft(lesson: Lesson): LessonDraft {
-  return {
-    _key: lesson.id,
-    id: lesson.id,
-    title: lesson.title,
-    description: lesson.description,
-    durationMinutes: String(lesson.durationMinutes),
-    videoUrl: lesson.videoUrl ?? '',
-    videoThumb: lesson.videoThumb ?? '#E2E8F0',
-    bodyContent: lesson.bodyContent ?? '',
-    topics: (lesson.topics ?? []).join(', '),
-    resources: lesson.resources.length > 0 ? lesson.resources.map(r => ({ ...r })) : [],
-    _original: lesson,
-  };
-}
-
-function draftToLesson(draft: LessonDraft, moduleId: string, order: number): Lesson {
-  const base: Lesson = draft._original ?? {
-    id: draft.id,
-    moduleId,
-    title: '',
-    description: '',
-    durationMinutes: 0,
-    videoThumb: '#E2E8F0',
-    bodyContent: '',
-    resources: [],
-    order,
-    status: 'not_started',
-  };
-  return {
-    ...base,
-    id: draft.id,
-    moduleId,
-    title: draft.title.trim(),
-    description: draft.description.trim(),
-    durationMinutes: Math.max(1, Number(draft.durationMinutes) || 1),
-    videoUrl: draft.videoUrl.trim() || undefined,
-    videoThumb: draft.videoThumb,
-    bodyContent: draft.bodyContent,
-    topics: draft.topics.split(',').map(t => t.trim()).filter(Boolean),
-    resources: draft.resources.filter(r => r.label.trim()),
-    order,
-  };
-}
-
-const EMPTY_LESSON_DRAFT = (): LessonDraft => {
-  const key = `new-${Date.now()}-${Math.random()}`;
-  return {
-    _key: key, id: key, title: '', description: '',
-    durationMinutes: '5', videoUrl: '', videoThumb: '#E2E8F0',
-    bodyContent: '', topics: '', resources: [],
-  };
-};
-
-// ─── Component ────────────────────────────────────────────────────────────────
+import { moduleStore } from '../../stores/moduleStore';
 
 export function ContentManagement() {
-  const [modules, setModules] = useState<Module[]>(MODULES);
+  const [, navigate] = useLocation();
+  const [refreshKey, setRefreshKey] = useState(0);
+  const modules = useMemo(() => moduleStore.getAll(), [refreshKey]);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set(['mod-1']));
   const [publishState, setPublishState] = useState<Record<string, 'published' | 'draft'>>(
-    Object.fromEntries(MODULES.map(m => [m.id, m.publishState]))
+    () => Object.fromEntries(moduleStore.getAll().map(m => [m.id, m.publishState]))
   );
+  const [deletedToast, setDeletedToast] = useState<string | null>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('deleted');
+  });
 
-  // Modal state: undefined = closed, null = creating new, Module = editing
-  const [editingModule, setEditingModule] = useState<Module | null | undefined>(undefined);
-  const modalOpen = editingModule !== undefined;
-  const [form, setForm] = useState<ModuleFormState>(EMPTY_FORM);
-  const [errors, setErrors] = useState<Partial<ModuleFormState>>({});
+  useEffect(() => {
+    if (!deletedToast) return;
+    window.history.replaceState(null, '', '/admin/content');
+    const t = setTimeout(() => setDeletedToast(null), 5000);
+    return () => clearTimeout(t);
+  }, [deletedToast]);
 
-  // Lesson drafts for the modal
-  const [lessonDrafts, setLessonDrafts] = useState<LessonDraft[]>([]);
-  const [expandedLessonKeys, setExpandedLessonKeys] = useState<Set<string>>(new Set());
+  const handleUndo = () => {
+    const restored = moduleStore.undoDelete();
+    if (restored) {
+      setPublishState(prev => ({ ...prev, [restored.id]: restored.publishState }));
+      setRefreshKey(k => k + 1);
+    }
+    setDeletedToast(null);
+  };
 
   const toggle = (id: string) => {
     setExpandedIds(prev => {
@@ -163,130 +51,18 @@ export function ContentManagement() {
     }));
   };
 
-  const openCreate = () => {
-    setForm(EMPTY_FORM);
-    setErrors({});
-    setLessonDrafts([]);
-    setExpandedLessonKeys(new Set());
-    setEditingModule(null);
-  };
-
-  const openEdit = (mod: Module) => {
-    setForm(moduleToForm(mod));
-    setErrors({});
-    const drafts = mod.lessons.map(lessonToDraft);
-    setLessonDrafts(drafts);
-    setExpandedLessonKeys(new Set());
-    setEditingModule(mod);
-  };
-
-  const closeModal = () => setEditingModule(undefined);
-
-  // ── Lesson draft helpers ──────────────────────────────────────────────────
-
-  const toggleLessonExpand = (key: string) => {
-    setExpandedLessonKeys(prev => {
-      const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
-      return next;
-    });
-  };
-
-  const updateLesson = (key: string, patch: Partial<LessonDraft>) => {
-    setLessonDrafts(prev => prev.map(d => d._key === key ? { ...d, ...patch } : d));
-  };
-
-  const addLesson = () => {
-    const draft = EMPTY_LESSON_DRAFT();
-    setLessonDrafts(prev => [...prev, draft]);
-    setExpandedLessonKeys(prev => new Set(prev).add(draft._key));
-  };
-
-  const deleteLesson = (key: string) => {
-    setLessonDrafts(prev => prev.filter(d => d._key !== key));
-    setExpandedLessonKeys(prev => { const next = new Set(prev); next.delete(key); return next; });
-  };
-
-  const addResource = (key: string) => {
-    updateLesson(key, {
-      resources: [...(lessonDrafts.find(d => d._key === key)?.resources ?? []), { label: '', url: '' }],
-    });
-  };
-
-  const updateResource = (lessonKey: string, idx: number, patch: Partial<ResourceDraft>) => {
-    setLessonDrafts(prev => prev.map(d => {
-      if (d._key !== lessonKey) return d;
-      const resources = d.resources.map((r, i) => i === idx ? { ...r, ...patch } : r);
-      return { ...d, resources };
-    }));
-  };
-
-  const removeResource = (lessonKey: string, idx: number) => {
-    setLessonDrafts(prev => prev.map(d => {
-      if (d._key !== lessonKey) return d;
-      return { ...d, resources: d.resources.filter((_, i) => i !== idx) };
-    }));
-  };
-
-  // ── Validate & save ───────────────────────────────────────────────────────
-
-  const validate = (): boolean => {
-    const errs: Partial<ModuleFormState> = {};
-    if (!form.title.trim()) errs.title = 'Title is required';
-    if (!form.description.trim()) errs.description = 'Description is required';
-    const mins = Number(form.estimatedMinutes);
-    if (!form.estimatedMinutes || isNaN(mins) || mins < 1) errs.estimatedMinutes = 'Enter a valid number of minutes';
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
-  };
-
-  const handleSave = () => {
-    if (!validate()) return;
-    const mins = Number(form.estimatedMinutes);
-    const lessons = lessonDrafts
-      .filter(d => d.title.trim())
-      .map((d, i) => draftToLesson(d, editingModule?.id ?? '', i + 1));
-
-    if (editingModule) {
-      setModules(prev => prev.map(m =>
-        m.id === editingModule.id
-          ? {
-              ...m,
-              title: form.title.trim(),
-              description: form.description.trim(),
-              tag: form.tag,
-              estimatedMinutes: mins,
-              publishState: form.publishState,
-              thumbnail: form.thumbnail || undefined,
-              lessons,
-            }
-          : m
-      ));
-      setPublishState(prev => ({ ...prev, [editingModule.id]: form.publishState }));
-    } else {
-      const newId = `mod-${Date.now()}`;
-      const newMod: Module = {
-        id: newId,
-        title: form.title.trim(),
-        description: form.description.trim(),
-        tag: form.tag,
-        estimatedMinutes: mins,
-        publishState: form.publishState,
-        thumbnail: form.thumbnail || undefined,
-        quizId: `quiz-${newId}`,
-        order: modules.length + 1,
-        status: 'not_started',
-        completedLessons: 0,
-        lessons: lessons.map(l => ({ ...l, moduleId: newId })),
-      };
-      setModules(prev => [...prev, newMod]);
-      setPublishState(prev => ({ ...prev, [newId]: form.publishState }));
-    }
-    closeModal();
-  };
-
   return (
     <AdminShell>
+      {/* Deleted toast */}
+      {deletedToast && (
+        <div className="flex items-center gap-3 px-4 py-3 mb-5 rounded-xl bg-brand-mint-pale border border-brand-mint text-sm font-medium" style={{ color: '#5A607F' }}>
+          <CheckCircle size={16} className="flex-shrink-0" />
+          <span>"{deletedToast}" was deleted.</span>
+          <button onClick={handleUndo} className="ml-auto font-semibold underline hover:opacity-70 transition-opacity">
+            Undo
+          </button>
+        </div>
+      )}
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
@@ -295,7 +71,7 @@ export function ContentManagement() {
             {modules.length} modules · {modules.reduce((s, m) => s + m.lessons.length, 0)} lessons
           </p>
         </div>
-        <Button onClick={openCreate}>
+        <Button onClick={() => navigate('/admin/modules/new/edit')}>
           <Plus size={15} /> New Module
         </Button>
       </div>
@@ -364,7 +140,7 @@ export function ContentManagement() {
                       : <><Eye size={12} /> Publish</>}
                   </button>
                   <button
-                    onClick={e => { e.stopPropagation(); openEdit(mod); }}
+                    onClick={e => { e.stopPropagation(); navigate(`/admin/modules/${mod.id}/edit`); }}
                     className="w-7 h-7 rounded-lg hover:bg-neutral-100 flex items-center justify-center text-neutral-400 hover:text-neutral-700 transition-colors"
                     title="Edit module"
                   >
@@ -385,9 +161,7 @@ export function ContentManagement() {
                       className="flex items-center gap-3 px-4 py-3 border-b border-neutral-100 last:border-b-0 hover:bg-neutral-50 group/lesson transition-colors"
                     >
                       <GripVertical size={14} className="text-neutral-200 flex-shrink-0 ml-9" />
-                      <div
-                        className="w-6 h-6 rounded flex items-center justify-center text-xs font-medium flex-shrink-0 bg-brand-mint-pale text-brand-navy"
-                      >
+                      <div className="w-6 h-6 rounded flex items-center justify-center text-xs font-medium flex-shrink-0 bg-brand-mint-pale text-brand-navy">
                         {lessonIdx + 1}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -398,20 +172,11 @@ export function ContentManagement() {
                         <span className="text-xs text-neutral-400 flex items-center gap-1">
                           <Clock size={11} /> {lesson.durationMinutes} min
                         </span>
-                        <div className="flex items-center gap-1 opacity-0 group-hover/lesson:opacity-100 transition-opacity">
-                          <button
-                            onClick={() => openEdit(mod)}
-                            className="w-7 h-7 rounded-lg hover:bg-neutral-100 flex items-center justify-center text-neutral-400 hover:text-neutral-700 transition-colors"
-                            title="Edit lesson"
-                          >
-                            <Edit2 size={13} />
-                          </button>
-                        </div>
                       </div>
                     </div>
                   ))}
                   <button
-                    onClick={() => openEdit(mod)}
+                    onClick={() => navigate(`/admin/modules/${mod.id}/edit`)}
                     className="flex items-center gap-2 px-4 py-3 w-full text-sm text-brand-navy ml-9"
                   >
                     <Plus size={14} /> Add lesson
@@ -422,281 +187,6 @@ export function ContentManagement() {
           );
         })}
       </div>
-
-      {/* Create / Edit Module Modal */}
-      <Modal
-        open={modalOpen}
-        onClose={closeModal}
-        title={editingModule ? 'Edit Module' : 'New Module'}
-        size="lg"
-      >
-        {/* Scrollable body */}
-        <div className="overflow-y-auto max-h-[70vh] -mx-6 px-6 flex flex-col gap-5">
-
-          {/* Module fields */}
-          <div className="flex flex-col gap-4">
-            <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">Module Details</p>
-            <Input
-              label="Title"
-              value={form.title}
-              onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-              placeholder="e.g. Sleep Safety"
-              error={errors.title}
-            />
-            <Textarea
-              label="Description"
-              value={form.description}
-              onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-              placeholder="Brief overview of the module…"
-              rows={3}
-              error={errors.description}
-            />
-            <div className="grid grid-cols-2 gap-4">
-              <Select
-                label="Topic"
-                value={form.tag}
-                onChange={e => setForm(f => ({ ...f, tag: e.target.value as TopicTag }))}
-                options={TOPIC_OPTIONS}
-              />
-              <Select
-                label="Status"
-                value={form.publishState}
-                onChange={e => setForm(f => ({ ...f, publishState: e.target.value as 'published' | 'draft' }))}
-                options={PUBLISH_OPTIONS}
-              />
-            </div>
-            <Input
-              label="Estimated minutes"
-              type="number"
-              min={1}
-              value={form.estimatedMinutes}
-              onChange={e => setForm(f => ({ ...f, estimatedMinutes: e.target.value }))}
-              error={errors.estimatedMinutes}
-            />
-
-            {/* Thumbnail */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-neutral-700">Module Thumbnail</label>
-              <div className="flex gap-3 items-start">
-                {/* Preview */}
-                <div className="w-24 h-24 rounded-xl border-2 border-dashed border-neutral-200 bg-neutral-50 flex-shrink-0 flex items-center justify-center overflow-hidden">
-                  {form.thumbnail
-                    ? <img src={form.thumbnail} alt="Thumbnail preview" className="w-full h-full object-cover" />
-                    : <div className="flex flex-col items-center gap-1 text-neutral-300">
-                        <ImageIcon size={22} />
-                        <span className="text-xs">Preview</span>
-                      </div>
-                  }
-                </div>
-                {/* URL input + clear */}
-                <div className="flex-1 flex flex-col gap-2">
-                  <Input
-                    label=""
-                    value={form.thumbnail}
-                    onChange={e => setForm(f => ({ ...f, thumbnail: e.target.value }))}
-                    placeholder="Paste image URL, e.g. /images/sleep-module.jpg"
-                  />
-                  {form.thumbnail && (
-                    <button
-                      type="button"
-                      onClick={() => setForm(f => ({ ...f, thumbnail: '' }))}
-                      className="text-xs text-red-400 hover:text-red-600 text-left transition-colors"
-                    >
-                      Remove thumbnail
-                    </button>
-                  )}
-                  <p className="text-xs text-neutral-400">Recommended: 400×400 px, JPG or PNG</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Divider */}
-          <div className="border-t border-neutral-100" />
-
-          {/* Lessons section */}
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">
-                Lessons <span className="ml-1 font-normal normal-case">({lessonDrafts.length})</span>
-              </p>
-            </div>
-
-            {lessonDrafts.length === 0 && (
-              <p className="text-sm text-neutral-400 py-2">No lessons yet. Add one below.</p>
-            )}
-
-            {lessonDrafts.map((draft, idx) => {
-              const isOpen = expandedLessonKeys.has(draft._key);
-              return (
-                <div key={draft._key} className="border border-neutral-200 rounded-xl overflow-hidden">
-                  {/* Lesson header row */}
-                  <div className="flex items-center gap-3 px-4 py-3 bg-neutral-50">
-                    <span className="w-5 h-5 rounded bg-neutral-200 flex items-center justify-center text-xs font-semibold text-neutral-500 flex-shrink-0">
-                      {idx + 1}
-                    </span>
-                    <p className="flex-1 text-sm font-medium text-neutral-700 truncate min-w-0">
-                      {draft.title.trim() || <span className="text-neutral-400 font-normal">Untitled lesson</span>}
-                    </p>
-                    <span className="text-xs text-neutral-400 flex-shrink-0">{draft.durationMinutes} min</span>
-                    <button
-                      onClick={() => toggleLessonExpand(draft._key)}
-                      className="w-7 h-7 rounded-lg hover:bg-neutral-200 flex items-center justify-center text-neutral-400 transition-colors flex-shrink-0"
-                      title={isOpen ? 'Collapse' : 'Expand'}
-                    >
-                      {isOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                    </button>
-                    <button
-                      onClick={() => deleteLesson(draft._key)}
-                      className="w-7 h-7 rounded-lg hover:bg-red-50 flex items-center justify-center text-neutral-300 hover:text-red-500 transition-colors flex-shrink-0"
-                      title="Delete lesson"
-                    >
-                      <Trash2 size={13} />
-                    </button>
-                  </div>
-
-                  {/* Lesson edit fields */}
-                  {isOpen && (
-                    <div className="px-4 py-4 flex flex-col gap-4 border-t border-neutral-100">
-
-                      {/* ── Basic info ── */}
-                      <Input
-                        label="Lesson title"
-                        value={draft.title}
-                        onChange={e => updateLesson(draft._key, { title: e.target.value })}
-                        placeholder="e.g. Understanding Hunger Cues"
-                      />
-                      <Textarea
-                        label="Description"
-                        value={draft.description}
-                        onChange={e => updateLesson(draft._key, { description: e.target.value })}
-                        placeholder="Short summary shown in the lesson list…"
-                        rows={2}
-                      />
-
-                      {/* ── Video ── */}
-                      <div className="grid grid-cols-2 gap-3">
-                        <Input
-                          label="Duration (minutes)"
-                          type="number"
-                          min={1}
-                          value={draft.durationMinutes}
-                          onChange={e => updateLesson(draft._key, { durationMinutes: e.target.value })}
-                        />
-                        <Input
-                          label="Video URL"
-                          value={draft.videoUrl}
-                          onChange={e => updateLesson(draft._key, { videoUrl: e.target.value })}
-                          placeholder="https://player.vimeo.com/…"
-                        />
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <label className="text-sm font-medium text-neutral-700 flex-shrink-0">
-                          Video placeholder colour
-                        </label>
-                        <input
-                          type="color"
-                          value={draft.videoThumb}
-                          onChange={e => updateLesson(draft._key, { videoThumb: e.target.value })}
-                          className="w-8 h-8 rounded cursor-pointer border border-neutral-200"
-                          title="Shown when no video URL is set"
-                        />
-                        <span className="text-xs text-neutral-400 font-mono">{draft.videoThumb}</span>
-                        <span className="text-xs text-neutral-400">(shown when no video URL is set)</span>
-                      </div>
-
-                      {/* ── Body content ── */}
-                      <Textarea
-                        label="Lesson body content (HTML)"
-                        value={draft.bodyContent}
-                        onChange={e => updateLesson(draft._key, { bodyContent: e.target.value })}
-                        placeholder="<p>Enter lesson content…</p>"
-                        rows={5}
-                      />
-
-                      {/* ── Topics (What You'll Learn) ── */}
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-sm font-medium text-neutral-700 flex items-center gap-1.5">
-                          <Tag size={13} className="text-neutral-400" /> Topics — "What You'll Learn"
-                        </label>
-                        <Input
-                          label=""
-                          value={draft.topics}
-                          onChange={e => updateLesson(draft._key, { topics: e.target.value })}
-                          placeholder="Hunger cues, Responsive feeding, Baby behavior"
-                        />
-                        <p className="text-xs text-neutral-400">Comma-separated. Shown as pill tags on the module overview.</p>
-                        {draft.topics && (
-                          <div className="flex flex-wrap gap-1.5 mt-0.5">
-                            {draft.topics.split(',').map(t => t.trim()).filter(Boolean).map(t => (
-                              <span key={t} className="px-2.5 py-1 rounded-full bg-brand-blue-pale text-brand-navy text-xs">{t}</span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* ── Resources ── */}
-                      <div className="flex flex-col gap-2">
-                        <label className="text-sm font-medium text-neutral-700 flex items-center gap-1.5">
-                          <ExternalLink size={13} className="text-neutral-400" /> Resource links
-                        </label>
-                        {draft.resources.map((res, rIdx) => (
-                          <div key={rIdx} className="flex items-center gap-2">
-                            <Input
-                              label=""
-                              value={res.label}
-                              onChange={e => updateResource(draft._key, rIdx, { label: e.target.value })}
-                              placeholder="Link label"
-                            />
-                            <Input
-                              label=""
-                              value={res.url}
-                              onChange={e => updateResource(draft._key, rIdx, { url: e.target.value })}
-                              placeholder="https://…"
-                            />
-                            <button
-                              onClick={() => removeResource(draft._key, rIdx)}
-                              className="w-7 h-7 flex-shrink-0 rounded-lg hover:bg-red-50 flex items-center justify-center text-neutral-300 hover:text-red-500 transition-colors"
-                              title="Remove resource"
-                            >
-                              <Trash2 size={13} />
-                            </button>
-                          </div>
-                        ))}
-                        <button
-                          onClick={() => addResource(draft._key)}
-                          className="flex items-center gap-1.5 text-xs text-brand-navy hover:text-brand-navy/80 transition-colors self-start"
-                        >
-                          <Plus size={12} /> Add resource link
-                        </button>
-                      </div>
-
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-
-            <button
-              onClick={addLesson}
-              className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-dashed border-neutral-300 text-sm text-brand-navy hover:border-brand-navy hover:bg-brand-mint-pale transition-colors w-full justify-center"
-            >
-              <Plus size={14} /> Add lesson
-            </button>
-          </div>
-
-          {/* Bottom padding so last item isn't clipped by scroll */}
-          <div className="h-1" />
-        </div>
-
-        {/* Sticky footer */}
-        <div className="flex justify-end gap-2 pt-4 mt-4 border-t border-neutral-100">
-          <Button variant="ghost" onClick={closeModal}>Cancel</Button>
-          <Button onClick={handleSave}>
-            {editingModule ? 'Save Changes' : 'Create Module'}
-          </Button>
-        </div>
-      </Modal>
     </AdminShell>
   );
 }
