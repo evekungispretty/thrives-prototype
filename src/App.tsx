@@ -2,6 +2,7 @@ import { Route, Switch, Redirect } from 'wouter';
 
 // Pages
 import { Login } from './pages/Login';
+import ThrivesUILibraryPortfolioPage from "./pages/ThrivesUILibraryPortfolioPage";
 
 // Participant
 import { ParticipantDashboard } from './pages/participant/Dashboard';
@@ -27,6 +28,7 @@ export default function App() {
     <Switch>
       {/* Root */}
       <Route path="/" component={Login} />
+      <Route path="/ui-library" component={ThrivesUILibraryPortfolioPage} />
 
       {/* Participant */}
       <Route path="/participant/dashboard" component={ParticipantDashboard} />
