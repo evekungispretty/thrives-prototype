@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
-  Search, Plus, MoreVertical, Rocket, ChevronDown, ChevronRight,
+  Search, Plus, MoreVertical, ChevronDown, ChevronRight,
   Edit2, Pen, Trash2, Copy, Check, GripVertical, CheckCircle2, X,
 } from 'lucide-react';
 import { useLocation, Link } from 'wouter';
