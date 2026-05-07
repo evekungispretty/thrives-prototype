@@ -82,9 +82,15 @@ export function ContentManagement() {
 
   const bulkDelete = () => {
     const count = selectedIds.size;
-    selectedIds.forEach(id => moduleStore.delete(id));
+    moduleStore.bulkDelete(selectedIds);
     setRefreshKey(k => k + 1);
-    show(`${count} module${count > 1 ? 's' : ''} deleted.`, { variant: 'delete' });
+    show(`${count} module${count > 1 ? 's' : ''} deleted.`, {
+      variant: 'delete',
+      onUndo: () => {
+        moduleStore.undoBulkDelete();
+        setRefreshKey(k => k + 1);
+      },
+    });
     setSelectedIds(new Set());
   };
 
