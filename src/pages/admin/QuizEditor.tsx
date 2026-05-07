@@ -178,9 +178,10 @@ export function QuizEditor() {
 
   const handleSave = () => {
     if (!title.trim()) return;
+    const trimmedTitle = title.trim();
     const data = {
       id: quizId,
-      title: title.trim(),
+      title: trimmedTitle,
       description,
       moduleId,
       dueAt,
@@ -197,15 +198,16 @@ export function QuizEditor() {
     };
     if (existing) {
       quizDataStore.update(data);
+      navigate(`/admin/questions?saved=${encodeURIComponent(trimmedTitle)}`);
     } else {
       quizDataStore.add(data);
+      navigate(`/admin/questions?created=${encodeURIComponent(trimmedTitle)}`);
     }
-    navigate('/admin/questions');
   };
 
   const handleDelete = () => {
     quizDataStore.delete(quizId);
-    navigate('/admin/questions');
+    navigate(`/admin/questions?deleted=${encodeURIComponent(title || 'Quiz')}`);
   };
 
   // ── Render ─────────────────────────────────────────────────────────────────

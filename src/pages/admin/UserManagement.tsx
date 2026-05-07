@@ -4,10 +4,12 @@ import { Link } from 'wouter';
 import { AdminShell } from '../../components/layout/AdminShell';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
+import { Toast } from '../../components/ui/Toast';
 import { Input, Select } from '../../components/ui/Input';
 import { Modal } from '../../components/ui/Modal';
 import { ProgressBar } from '../../components/ui/ProgressBar';
 import { ParticipantStatusBadge } from '../../components/ui/Badge';
+import { useToast } from '../../hooks/useToast';
 import { ALL_PARTICIPANTS } from '../../data/users';
 import { MODULES } from '../../data/modules';
 import type { ParticipantStatus } from '../../types';
@@ -37,6 +39,7 @@ export function UserManagement() {
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState<FormData>(INITIAL_FORM);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const { toast, show, dismiss } = useToast();
 
   const totalModules = MODULES.filter(m => m.publishState === 'published').length;
 
@@ -51,13 +54,15 @@ export function UserManagement() {
   });
 
   const handleSave = () => {
-    // In a real app: dispatch to state. For demo, just close.
+    const name = form.name;
     setModalOpen(false);
     setForm(INITIAL_FORM);
+    show(`${name} was added as a participant.`);
   };
 
   return (
     <AdminShell>
+      {toast && <Toast message={toast.message} onDismiss={dismiss} />}
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
@@ -172,7 +177,11 @@ export function UserManagement() {
                               {['Edit Participant', 'Send Reminder', 'Remove'].map(action => (
                                 <button
                                   key={action}
-                                  onClick={() => setOpenMenuId(null)}
+                                  onClick={() => {
+                                    setOpenMenuId(null);
+                                    if (action === 'Send Reminder') show(`Reminder sent to ${user.name}.`);
+                                    if (action === 'Remove') show(`${user.name} was removed.`);
+                                  }}
                                   className={`w-full text-left px-3 py-2 text-sm hover:bg-neutral-50 transition-colors ${action === 'Remove' ? 'text-red-500' : 'text-neutral-700'}`}
                                 >
                                   {action}

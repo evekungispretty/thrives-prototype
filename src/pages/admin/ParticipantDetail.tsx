@@ -6,8 +6,10 @@ import { Card } from '../../components/ui/Card';
 import { ProgressBar } from '../../components/ui/ProgressBar';
 import { TopicBadge, ModuleStatusBadge, ParticipantStatusBadge } from '../../components/ui/Badge';
 import { Modal } from '../../components/ui/Modal';
+import { Toast } from '../../components/ui/Toast';
 import { Input, Select, Textarea } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
+import { useToast } from '../../hooks/useToast';
 import { MODULES } from '../../data/modules';
 import { ALL_PARTICIPANTS } from '../../data/users';
 import { QUESTIONS } from '../../data/questions';
@@ -28,6 +30,7 @@ export function ParticipantDetail() {
   const [user, setUser] = useState<User | undefined>(initial);
   const [editOpen, setEditOpen] = useState(false);
   const [credOpen, setCredOpen] = useState(false);
+  const { toast, show, dismiss } = useToast();
 
   // Edit form state
   const [draft, setDraft] = useState<Partial<User>>({});
@@ -72,6 +75,7 @@ export function ParticipantDetail() {
   function saveEdit() {
     setUser(prev => prev ? { ...prev, ...draft, tags: draftTags } : prev);
     setEditOpen(false);
+    show('Changes saved.');
   }
 
   function addTag() {
@@ -99,10 +103,12 @@ export function ParticipantDetail() {
     if (credDraft.password) setMockPassword('••••••••••');
     setUser(prev => prev ? { ...prev, email: credDraft.username } : prev);
     setCredOpen(false);
+    show('Credentials updated.');
   }
 
   return (
     <AdminShell>
+      {toast && <Toast message={toast.message} onUndo={toast.onUndo} onDismiss={dismiss} />}
       {/* Back */}
       <Link href="/admin/users" className="inline-flex items-center gap-1.5 text-sm text-neutral-500 hover:text-neutral-700 mb-6 transition-colors">
         <ArrowLeft size={15} /> All Participants

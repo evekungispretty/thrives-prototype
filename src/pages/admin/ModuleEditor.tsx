@@ -8,9 +8,11 @@ import { useParams, useLocation } from 'wouter';
 import { AdminShell } from '../../components/layout/AdminShell';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
+import { Toast } from '../../components/ui/Toast';
 import { Input, Select, Textarea } from '../../components/ui/Input';
 import { MODULES } from '../../data/modules';
 import { moduleStore } from '../../stores/moduleStore';
+import { useToast } from '../../hooks/useToast';
 import type { Lesson, Module, TopicTag } from '../../types';
 
 // ─── Static options ────────────────────────────────────────────────────────────
@@ -158,6 +160,7 @@ export function ModuleEditor() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [lessonToDelete, setLessonToDelete] = useState<string | null>(null);
   const [showPublishDropdown, setShowPublishDropdown] = useState(false);
+  const { toast, show, dismiss } = useToast();
 
   // ── Topic dropdown state ───────────────────────────────────────────────────
   const [topicOptions, setTopicOptions] = useState(INITIAL_TOPIC_OPTIONS);
@@ -266,10 +269,11 @@ export function ModuleEditor() {
       .filter(d => d.title.trim())
       .map((d, i) => draftToLesson(d, moduleId, i + 1));
 
+    const title = form.title.trim();
     if (existingModule) {
       moduleStore.update({
         ...existingModule,
-        title: form.title.trim(),
+        title,
         description: form.description.trim(),
         tag: form.tag as TopicTag,
         estimatedMinutes: mins,
@@ -278,10 +282,11 @@ export function ModuleEditor() {
         quizId: form.quizId,
         lessons,
       });
+      navigate(`/admin/content?saved=${encodeURIComponent(title)}`);
     } else {
       const newMod: Module = {
         id: moduleId,
-        title: form.title.trim(),
+        title,
         description: form.description.trim(),
         tag: form.tag as TopicTag,
         estimatedMinutes: mins,
@@ -294,8 +299,8 @@ export function ModuleEditor() {
         lessons: lessons.map(l => ({ ...l, moduleId })),
       };
       moduleStore.add(newMod);
+      navigate(`/admin/content?created=${encodeURIComponent(title)}`);
     }
-    navigate('/admin/content');
   };
 
   const handleDelete = () => {
@@ -317,6 +322,7 @@ export function ModuleEditor() {
 
   return (
     <AdminShell>
+      {toast && <Toast message={toast.message} onUndo={toast.onUndo} onDismiss={dismiss} />}
       {/* Page header */}
       <div className="flex items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-3">
@@ -720,8 +726,10 @@ export function ModuleEditor() {
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={() => setLessonToDelete(null)}>Cancel</Button>
           <Button variant="danger" onClick={() => {
+            const lessonTitle = lessonDrafts.find(d => d._key === lessonToDelete)?.title.trim() || 'Lesson';
             if (lessonToDelete) deleteLesson(lessonToDelete);
             setLessonToDelete(null);
+            show(`"${lessonTitle}" was deleted.`);
           }}>Delete</Button>
         </div>
       </Modal>

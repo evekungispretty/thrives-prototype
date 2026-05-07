@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Search, Plus, MoreVertical, Rocket, ChevronDown, ChevronRight,
   Edit2, Trash2, Copy, Check, GripVertical, CheckCircle2, X,
@@ -7,7 +7,9 @@ import { useLocation } from 'wouter';
 import { AdminShell } from '../../components/layout/AdminShell';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
+import { Toast } from '../../components/ui/Toast';
 import { Input, Select, Textarea } from '../../components/ui/Input';
+import { useToast } from '../../hooks/useToast';
 import { MODULES } from '../../data/modules';
 import { QUESTIONS as SEED_QUESTIONS } from '../../data/questions';
 import type { QuestionType, Question, ChoiceOption, MatchingPair } from '../../types';
@@ -110,6 +112,7 @@ function seedQuestions(): Record<string, Question[]> {
 
 export function QuestionBank() {
   const [, navigate] = useLocation();
+  const { toast, show, dismiss } = useToast();
   const [quizzes, setQuizzes]             = useState<Quiz[]>(INITIAL_QUIZZES);
   const [questionsByQuiz, setQByQuiz]     = useState<Record<string, Question[]>>(seedQuestions);
   const [search, setSearch]               = useState('');
@@ -128,6 +131,18 @@ export function QuestionBank() {
   // Drag-to-reorder state
   const [dragState, setDragState] = useState<{ quizId: string; fromIdx: number; overIdx: number } | null>(null);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const deleted = params.get('deleted');
+    const saved = params.get('saved');
+    const created = params.get('created');
+    if (!deleted && !saved && !created) return;
+    window.history.replaceState(null, '', '/admin/questions');
+    if (deleted) show(`"${deleted}" was deleted.`);
+    else if (saved) show(`"${saved}" was saved.`);
+    else if (created) show(`"${created}" was created!`);
+  }, []);
+
   // ── Derived ──────────────────────────────────────────────────────────────
 
   const filtered = quizzes.filter(q =>
@@ -139,16 +154,20 @@ export function QuestionBank() {
 
   const handleDuplicateQuiz = (quiz: Quiz) => {
     const newId = `quiz-${Date.now()}`;
-    setQuizzes(qs => [...qs, { ...quiz, id: newId, title: `${quiz.title} (Copy)`, status: 'draft', completed: false }]);
+    const copyTitle = `${quiz.title} (Copy)`;
+    setQuizzes(qs => [...qs, { ...quiz, id: newId, title: copyTitle, status: 'draft', completed: false }]);
     setQByQuiz(m => ({ ...m, [newId]: (m[quiz.id] ?? []).map(q => ({ ...q, id: genQId(), quizId: newId })) }));
     setActiveKebab(null);
+    show(`"${copyTitle}" was created.`);
   };
 
   const handleDeleteQuiz = (id: string) => {
+    const quizTitle = quizzes.find(q => q.id === id)?.title ?? 'Quiz';
     setQuizzes(qs => qs.filter(q => q.id !== id));
     setQByQuiz(m => { const next = { ...m }; delete next[id]; return next; });
     if (expandedQuizId === id) setExpandedQuizId(null);
     setDeleteConfirmId(null);
+    show(`"${quizTitle}" was deleted.`);
   };
 
   // ── Question handlers ──────────────────────────────────────────────────────
@@ -189,9 +208,11 @@ export function QuestionBank() {
 
     if (editingQId) {
       setQByQuiz(m => ({ ...m, [quizId]: existing.map(q => q.id === editingQId ? buildQ(editingQId, q.order) : q) }));
+      show('Question updated.');
     } else {
       const id = genQId();
       setQByQuiz(m => ({ ...m, [quizId]: [...existing, buildQ(id, existing.length + 1)] }));
+      show('Question added!');
     }
     setQModalOpen(false);
   };
@@ -201,6 +222,7 @@ export function QuestionBank() {
     const { quizId, qId } = qDeleteId;
     setQByQuiz(m => ({ ...m, [quizId]: (m[quizId] ?? []).filter(q => q.id !== qId) }));
     setQDeleteId(null);
+    show('Question deleted.');
   };
 
   // ── Drag-to-reorder handlers ───────────────────────────────────────────────
@@ -266,6 +288,7 @@ export function QuestionBank() {
 
   return (
     <AdminShell>
+      {toast && <Toast message={toast.message} onUndo={toast.onUndo} onDismiss={dismiss} />}
       {/* Click-outside for kebab */}
       {activeKebab && <div className="fixed inset-0 z-10" onClick={() => setActiveKebab(null)} />}
 

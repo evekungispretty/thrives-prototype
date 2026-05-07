@@ -1,11 +1,13 @@
 import { useState, useEffect, useMemo } from 'react';
-import { ChevronDown, ChevronRight, Plus, Edit2, Eye, EyeOff, GripVertical, BookOpen, Clock, FileQuestion, ImageIcon, CheckCircle } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, Edit2, Eye, EyeOff, GripVertical, BookOpen, Clock, FileQuestion, ImageIcon } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { AdminShell } from '../../components/layout/AdminShell';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
+import { Toast } from '../../components/ui/Toast';
 import { TopicBadge } from '../../components/ui/Badge';
 import { moduleStore } from '../../stores/moduleStore';
+import { useToast } from '../../hooks/useToast';
 
 export function ContentManagement() {
   const [, navigate] = useLocation();
@@ -15,26 +17,31 @@ export function ContentManagement() {
   const [publishState, setPublishState] = useState<Record<string, 'published' | 'draft'>>(
     () => Object.fromEntries(moduleStore.getAll().map(m => [m.id, m.publishState]))
   );
-  const [deletedToast, setDeletedToast] = useState<string | null>(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('deleted');
-  });
+  const { toast, show, dismiss } = useToast();
 
   useEffect(() => {
-    if (!deletedToast) return;
+    const params = new URLSearchParams(window.location.search);
+    const deleted = params.get('deleted');
+    const saved = params.get('saved');
+    const created = params.get('created');
+    if (!deleted && !saved && !created) return;
     window.history.replaceState(null, '', '/admin/content');
-    const t = setTimeout(() => setDeletedToast(null), 5000);
-    return () => clearTimeout(t);
-  }, [deletedToast]);
-
-  const handleUndo = () => {
-    const restored = moduleStore.undoDelete();
-    if (restored) {
-      setPublishState(prev => ({ ...prev, [restored.id]: restored.publishState }));
-      setRefreshKey(k => k + 1);
+    if (deleted) {
+      show(`"${deleted}" was deleted.`, {
+        onUndo: () => {
+          const restored = moduleStore.undoDelete();
+          if (restored) {
+            setPublishState(prev => ({ ...prev, [restored.id]: restored.publishState }));
+            setRefreshKey(k => k + 1);
+          }
+        },
+      });
+    } else if (saved) {
+      show(`"${saved}" was saved.`);
+    } else if (created) {
+      show(`"${created}" was created!`);
     }
-    setDeletedToast(null);
-  };
+  }, []);
 
   const toggle = (id: string) => {
     setExpandedIds(prev => {
@@ -45,24 +52,15 @@ export function ContentManagement() {
   };
 
   const togglePublish = (id: string) => {
-    setPublishState(prev => ({
-      ...prev,
-      [id]: prev[id] === 'published' ? 'draft' : 'published',
-    }));
+    const next = publishState[id] === 'published' ? 'draft' : 'published';
+    setPublishState(prev => ({ ...prev, [id]: next }));
+    const title = modules.find(m => m.id === id)?.title ?? 'Module';
+    show(next === 'published' ? `"${title}" is now published.` : `"${title}" is set to draft.`);
   };
 
   return (
     <AdminShell>
-      {/* Deleted toast */}
-      {deletedToast && (
-        <div className="flex items-center gap-3 px-4 py-3 mb-5 rounded-xl bg-brand-mint-pale border border-brand-mint text-sm font-medium" style={{ color: '#5A607F' }}>
-          <CheckCircle size={16} className="flex-shrink-0" />
-          <span>"{deletedToast}" was deleted.</span>
-          <button onClick={handleUndo} className="ml-auto font-semibold underline hover:opacity-70 transition-opacity">
-            Undo
-          </button>
-        </div>
-      )}
+      {toast && <Toast message={toast.message} onUndo={toast.onUndo} onDismiss={dismiss} />}
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
