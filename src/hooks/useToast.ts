@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 interface ToastState {
   message: string;
   onUndo?: () => void;
+  variant?: 'default' | 'delete';
 }
 
 export function useToast() {
@@ -14,7 +15,7 @@ export function useToast() {
     return () => clearTimeout(t);
   }, [toast]);
 
-  const show = useCallback((message: string, options?: { onUndo?: () => void }) => {
+  const show = useCallback((message: string, options?: { onUndo?: () => void; variant?: 'default' | 'delete' }) => {
     setToast({ message, ...options });
   }, []);
 

@@ -4,12 +4,23 @@ import { LayoutDashboard, Users, HelpCircle, BookOpen, BarChart2, LogOut, Menu }
 import { useState } from 'react';
 import { DEMO_ADMIN } from '../../data/users';
 
-const NAV_LINKS = [
-  { href: '/admin/dashboard', label: 'Dashboard',    icon: LayoutDashboard },
-  { href: '/admin/users',     label: 'Participants',  icon: Users },
-  { href: '/admin/questions', label: 'Quizzes',       icon: HelpCircle },
-  { href: '/admin/content',   label: 'Content',       icon: BookOpen },
-  { href: '/admin/research',  label: 'Research',      icon: BarChart2 },
+type NavLink = {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ size?: number }>;
+  children?: Omit<NavLink, 'children'>[];
+};
+
+const NAV_LINKS: NavLink[] = [
+  { href: '/admin/dashboard', label: 'Dashboard',   icon: LayoutDashboard },
+  { href: '/admin/users',     label: 'Participants', icon: Users },
+  {
+    href: '/admin/content',   label: 'Content',      icon: BookOpen,
+    children: [
+      { href: '/admin/questions', label: 'Quizzes', icon: HelpCircle },
+    ],
+  },
+  { href: '/admin/research',  label: 'Research',    icon: BarChart2 },
 ];
 
 function SidebarNav({ location, onNavClick }: { location: string; onNavClick?: () => void }) {
@@ -26,23 +37,48 @@ function SidebarNav({ location, onNavClick }: { location: string; onNavClick?: (
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 flex flex-col gap-0.5">
-        {NAV_LINKS.map(({ href, label, icon: Icon }) => {
+        {NAV_LINKS.map(({ href, label, icon: Icon, children }) => {
           const active = location.startsWith(href);
+          const childActive = children?.some(c => location.startsWith(c.href));
           return (
-            <Link
-              key={href}
-              href={href}
-              onClick={onNavClick}
-              className={clsx(
-                'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-                active
-                  ? 'bg-white/15 text-white'
-                  : 'text-white/60 hover:text-white hover:bg-white/10',
+            <div key={href}>
+              <Link
+                href={href}
+                onClick={onNavClick}
+                className={clsx(
+                  'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                  active || childActive
+                    ? 'bg-white/15 text-white'
+                    : 'text-white/60 hover:text-white hover:bg-white/10',
+                )}
+              >
+                <Icon size={16} />
+                {label}
+              </Link>
+              {children && (active || childActive) && (
+                <div className="ml-3 pl-3 border-l border-white/20 mt-0.5 flex flex-col gap-0.5">
+                  {children.map(({ href: childHref, label: childLabel, icon: ChildIcon }) => {
+                    const childIsActive = location.startsWith(childHref);
+                    return (
+                      <Link
+                        key={childHref}
+                        href={childHref}
+                        onClick={onNavClick}
+                        className={clsx(
+                          'flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                          childIsActive
+                            ? 'text-white'
+                            : 'text-white/60 hover:text-white hover:bg-white/10',
+                        )}
+                      >
+                        <ChildIcon size={16} />
+                        {childLabel}
+                      </Link>
+                    );
+                  })}
+                </div>
               )}
-            >
-              <Icon size={16} />
-              {label}
-            </Link>
+            </div>
           );
         })}
       </nav>

@@ -108,7 +108,7 @@ export function ParticipantDetail() {
 
   return (
     <AdminShell>
-      {toast && <Toast message={toast.message} onUndo={toast.onUndo} onDismiss={dismiss} />}
+      {toast && <Toast message={toast.message} onUndo={toast.onUndo} onDismiss={dismiss} variant={toast.variant} />}
       {/* Back */}
       <Link href="/admin/users" className="inline-flex items-center gap-1.5 text-sm text-neutral-500 hover:text-neutral-700 mb-6 transition-colors">
         <ArrowLeft size={15} /> All Participants

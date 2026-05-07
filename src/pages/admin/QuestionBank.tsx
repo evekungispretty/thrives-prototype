@@ -3,7 +3,7 @@ import {
   Search, Plus, MoreVertical, Rocket, ChevronDown, ChevronRight,
   Edit2, Trash2, Copy, Check, GripVertical, CheckCircle2, X,
 } from 'lucide-react';
-import { useLocation } from 'wouter';
+import { useLocation, Link } from 'wouter';
 import { AdminShell } from '../../components/layout/AdminShell';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
@@ -138,7 +138,7 @@ export function QuestionBank() {
     const created = params.get('created');
     if (!deleted && !saved && !created) return;
     window.history.replaceState(null, '', '/admin/questions');
-    if (deleted) show(`"${deleted}" was deleted.`);
+    if (deleted) show(`"${deleted}" was deleted.`, { variant: 'delete' });
     else if (saved) show(`"${saved}" was saved.`);
     else if (created) show(`"${created}" was created!`);
   }, []);
@@ -167,7 +167,7 @@ export function QuestionBank() {
     setQByQuiz(m => { const next = { ...m }; delete next[id]; return next; });
     if (expandedQuizId === id) setExpandedQuizId(null);
     setDeleteConfirmId(null);
-    show(`"${quizTitle}" was deleted.`);
+    show(`"${quizTitle}" was deleted.`, { variant: 'delete' });
   };
 
   // ── Question handlers ──────────────────────────────────────────────────────
@@ -222,7 +222,7 @@ export function QuestionBank() {
     const { quizId, qId } = qDeleteId;
     setQByQuiz(m => ({ ...m, [quizId]: (m[quizId] ?? []).filter(q => q.id !== qId) }));
     setQDeleteId(null);
-    show('Question deleted.');
+    show('Question deleted.', { variant: 'delete' });
   };
 
   // ── Drag-to-reorder handlers ───────────────────────────────────────────────
@@ -288,12 +288,20 @@ export function QuestionBank() {
 
   return (
     <AdminShell>
-      {toast && <Toast message={toast.message} onUndo={toast.onUndo} onDismiss={dismiss} />}
+      {toast && <Toast message={toast.message} onUndo={toast.onUndo} onDismiss={dismiss} variant={toast.variant} />}
       {/* Click-outside for kebab */}
       {activeKebab && <div className="fixed inset-0 z-10" onClick={() => setActiveKebab(null)} />}
 
-      {/* Top bar */}
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-1.5 text-sm mb-1">
+        <Link href="/admin/content" className="text-neutral-400 hover:text-brand-navy transition-colors">Content</Link>
+        <ChevronRight size={13} className="text-neutral-300 flex-shrink-0" />
+        <span className="text-neutral-700 font-medium">Quizzes</span>
+      </nav>
+
+      {/* Page title + actions */}
       <div className="flex items-center gap-3 mb-6">
+        <h1 className="text-2xl font-bold text-neutral-900 mr-auto">Quiz Management</h1>
         <div className="relative w-72">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
           <input
@@ -302,8 +310,7 @@ export function QuestionBank() {
             className="h-9 w-full rounded-lg border border-neutral-300 pl-9 pr-3 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand-navy focus:border-brand-navy"
           />
         </div>
-        <div className="flex-1" />
-        <Button onClick={() => navigate('/admin/quizzes/new')}><Plus size={15} /> Quiz/Survey</Button>
+        <Button onClick={() => navigate('/admin/quizzes/new')}><Plus size={15} /> Quiz</Button>
       </div>
 
       {/* Assignment Quizzes section */}

@@ -1,18 +1,28 @@
-import { CheckCircle, X } from 'lucide-react';
+import { CheckCircle, Info, X } from 'lucide-react';
 
 interface ToastProps {
   message: string;
   onDismiss: () => void;
   onUndo?: () => void;
+  variant?: 'default' | 'delete';
 }
 
-export function Toast({ message, onDismiss, onUndo }: ToastProps) {
+export function Toast({ message, onDismiss, onUndo, variant = 'default' }: ToastProps) {
+  const isDelete = variant === 'delete';
   return (
     <div
-      className="flex items-center gap-3 px-4 py-3 mb-5 rounded-xl bg-brand-mint-pale border border-brand-mint text-sm font-medium"
-      style={{ color: '#5A607F' }}
+      className={`flex items-center gap-3 px-4 py-3 mb-5 rounded-xl border text-sm font-medium ${
+        isDelete ? '' : 'bg-brand-mint-pale border-brand-mint'
+      }`}
+      style={{
+        color: '#5A607F',
+        ...(isDelete && { backgroundColor: '#FFF4F5', borderColor: '#F87170' }),
+      }}
     >
-      <CheckCircle size={16} className="flex-shrink-0 text-brand-navy" />
+      {isDelete
+        ? <Info size={16} className="flex-shrink-0 text-brand-navy" />
+        : <CheckCircle size={16} className="flex-shrink-0 text-brand-navy" />
+      }
       <span>{message}</span>
       {onUndo && (
         <button

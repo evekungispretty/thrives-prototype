@@ -297,6 +297,7 @@ export function ModuleEditor() {
         status: 'not_started',
         completedLessons: 0,
         lessons: lessons.map(l => ({ ...l, moduleId })),
+        createdAt: new Date().toISOString().slice(0, 10),
       };
       moduleStore.add(newMod);
       navigate(`/admin/content?created=${encodeURIComponent(title)}`);
@@ -322,7 +323,7 @@ export function ModuleEditor() {
 
   return (
     <AdminShell>
-      {toast && <Toast message={toast.message} onUndo={toast.onUndo} onDismiss={dismiss} />}
+      {toast && <Toast message={toast.message} onUndo={toast.onUndo} onDismiss={dismiss} variant={toast.variant} />}
       {/* Page header */}
       <div className="flex items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-3">
@@ -729,7 +730,7 @@ export function ModuleEditor() {
             const lessonTitle = lessonDrafts.find(d => d._key === lessonToDelete)?.title.trim() || 'Lesson';
             if (lessonToDelete) deleteLesson(lessonToDelete);
             setLessonToDelete(null);
-            show(`"${lessonTitle}" was deleted.`);
+            show(`"${lessonTitle}" was deleted.`, { variant: 'delete' });
           }}>Delete</Button>
         </div>
       </Modal>

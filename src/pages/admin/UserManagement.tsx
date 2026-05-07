@@ -62,7 +62,7 @@ export function UserManagement() {
 
   return (
     <AdminShell>
-      {toast && <Toast message={toast.message} onDismiss={dismiss} />}
+      {toast && <Toast message={toast.message} onDismiss={dismiss} variant={toast.variant} />}
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
@@ -180,7 +180,7 @@ export function UserManagement() {
                                   onClick={() => {
                                     setOpenMenuId(null);
                                     if (action === 'Send Reminder') show(`Reminder sent to ${user.name}.`);
-                                    if (action === 'Remove') show(`${user.name} was removed.`);
+                                    if (action === 'Remove') show(`${user.name} was removed.`, { variant: 'delete' });
                                   }}
                                   className={`w-full text-left px-3 py-2 text-sm hover:bg-neutral-50 transition-colors ${action === 'Remove' ? 'text-red-500' : 'text-neutral-700'}`}
                                 >

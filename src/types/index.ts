@@ -38,6 +38,7 @@ export interface Module {
   completedLessons: number;
   publishState: 'published' | 'draft';
   thumbnail?: string; // path relative to public, e.g. /images/mod-feeding.jpg
+  createdAt?: string;
 }
 
 // ─── Quiz & Questions ─────────────────────────────────────────────────────────

@@ -4,7 +4,7 @@ export const MODULES: Module[] = [
   {
     id: 'mod-1',
     title: 'Feeding Your Baby',
-    thumbnail: '/images/tiny-tummies1.jpg',   
+    thumbnail: '/images/tiny-tummies1.jpg',
     description:
       'Understand the basics of infant feeding — from breastfeeding and formula to responsive feeding cues and introducing solids.',
     tag: 'infant-feeding',
@@ -14,6 +14,7 @@ export const MODULES: Module[] = [
     status: 'completed',
     completedLessons: 4,
     publishState: 'published',
+    createdAt: '2025-10-01',
     lessons: [
       {
         id: 'les-1-1',
@@ -96,7 +97,7 @@ export const MODULES: Module[] = [
   {
     id: 'mod-2',
     title: 'Tummy Time',
-    thumbnail: '/images/tiny-tummies2.jpeg',   
+    thumbnail: '/images/tiny-tummies2.jpeg',
     description:
       'Learn why tummy time matters, how to make it enjoyable, and how to build it safely into your daily routine.',
     tag: 'tummy-time',
@@ -106,6 +107,7 @@ export const MODULES: Module[] = [
     status: 'in_progress',
     completedLessons: 2,
     publishState: 'published',
+    createdAt: '2025-10-15',
     lessons: [
       {
         id: 'les-2-1',
@@ -161,7 +163,7 @@ export const MODULES: Module[] = [
   {
     id: 'mod-3',
     title: 'Healthy Screen Time Habits',
-    thumbnail: '/images/tiny-tummies3.png',   
+    thumbnail: '/images/tiny-tummies3.png',
     description:
       'Navigate screen time with young children — understanding the research, setting boundaries, and using media intentionally.',
     tag: 'screen-time',
@@ -171,6 +173,7 @@ export const MODULES: Module[] = [
     status: 'not_started',
     completedLessons: 0,
     publishState: 'published',
+    createdAt: '2025-11-01',
     lessons: [
       {
         id: 'les-3-1',
@@ -233,6 +236,7 @@ export const MODULES: Module[] = [
     status: 'not_started',
     completedLessons: 0,
     publishState: 'published',
+    createdAt: '2025-11-20',
     lessons: [
       {
         id: 'les-4-1',
@@ -295,6 +299,7 @@ export const MODULES: Module[] = [
     status: 'not_started',
     completedLessons: 0,
     publishState: 'published',
+    createdAt: '2025-12-10',
     lessons: [
       {
         id: 'les-5-1',
@@ -362,6 +367,7 @@ export const MODULES: Module[] = [
     status: 'not_started',
     completedLessons: 0,
     publishState: 'draft',
+    createdAt: '2026-01-05',
     lessons: [
       {
         id: 'les-6-1',

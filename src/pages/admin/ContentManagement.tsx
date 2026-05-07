@@ -10,7 +10,7 @@ import { moduleStore } from '../../stores/moduleStore';
 import { useToast } from '../../hooks/useToast';
 
 type FilterStatus = 'all' | 'published' | 'draft';
-type SortOrder = 'default' | 'az' | 'za';
+type SortOrder = 'default' | 'az' | 'za' | 'date-new' | 'date-old';
 
 export function ContentManagement() {
   const [, navigate] = useLocation();
@@ -30,6 +30,8 @@ export function ContentManagement() {
     if (filterStatus !== 'all') list = list.filter(m => (publishState[m.id] ?? m.publishState) === filterStatus);
     if (sortOrder === 'az') list.sort((a, b) => a.title.localeCompare(b.title));
     if (sortOrder === 'za') list.sort((a, b) => b.title.localeCompare(a.title));
+    if (sortOrder === 'date-new') list.sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''));
+    if (sortOrder === 'date-old') list.sort((a, b) => (a.createdAt ?? '').localeCompare(b.createdAt ?? ''));
     return list;
   }, [modules, filterStatus, sortOrder, publishState]);
 
@@ -70,6 +72,7 @@ export function ContentManagement() {
     window.history.replaceState(null, '', '/admin/content');
     if (deleted) {
       show(`"${deleted}" was deleted.`, {
+        variant: 'delete',
         onUndo: () => {
           const restored = moduleStore.undoDelete();
           if (restored) {
@@ -102,7 +105,7 @@ export function ContentManagement() {
 
   return (
     <AdminShell>
-      {toast && <Toast message={toast.message} onUndo={toast.onUndo} onDismiss={dismiss} />}
+      {toast && <Toast message={toast.message} onUndo={toast.onUndo} onDismiss={dismiss} variant={toast.variant} />}
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
@@ -151,6 +154,8 @@ export function ContentManagement() {
           <option value="default">Sort: Default</option>
           <option value="az">Sort: A → Z</option>
           <option value="za">Sort: Z → A</option>
+          <option value="date-new">Sort: Newest first</option>
+          <option value="date-old">Sort: Oldest first</option>
         </select>
 
         {/* Bulk actions — shown when something is selected */}
@@ -202,9 +207,7 @@ export function ContentManagement() {
                       <ImageIcon size={16} className="text-neutral-300" />
                     </div>
                 }
-                <div className="w-5 h-5 rounded bg-neutral-100 flex items-center justify-center text-xs font-semibold text-neutral-500 flex-shrink-0">
-                  {modIdx + 1}
-                </div>
+
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-sm font-semibold text-neutral-800">{mod.title}</p>
