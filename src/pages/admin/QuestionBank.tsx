@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Search, Plus, MoreVertical, Rocket, ChevronDown, ChevronRight,
-  Edit2, Trash2, Copy, Check, GripVertical, CheckCircle2, X,
+  Edit2, Pen, Trash2, Copy, Check, GripVertical, CheckCircle2, X,
 } from 'lucide-react';
 import { useLocation, Link } from 'wouter';
 import { AdminShell } from '../../components/layout/AdminShell';
 import { Button } from '../../components/ui/Button';
+import { Card } from '../../components/ui/Card';
 import { Modal } from '../../components/ui/Modal';
 import { Toast } from '../../components/ui/Toast';
 import { Input, Select, Textarea } from '../../components/ui/Input';
@@ -116,7 +117,8 @@ export function QuestionBank() {
   const [quizzes, setQuizzes]             = useState<Quiz[]>(INITIAL_QUIZZES);
   const [questionsByQuiz, setQByQuiz]     = useState<Record<string, Question[]>>(seedQuestions);
   const [search, setSearch]               = useState('');
-  const [sectionOpen, setSectionOpen]     = useState(true);
+  const [moduleFilter, setModuleFilter]   = useState('all');
+  const [sortOrder, setSortOrder]         = useState<'default' | 'az' | 'za' | 'date-new' | 'date-old'>('default');
   const [expandedQuizId, setExpandedQuizId] = useState<string | null>(null);
   const [activeKebab, setActiveKebab]     = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
@@ -145,9 +147,16 @@ export function QuestionBank() {
 
   // ── Derived ──────────────────────────────────────────────────────────────
 
-  const filtered = quizzes.filter(q =>
-    !search || q.title.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = useMemo(() => {
+    let list = [...quizzes];
+    if (search) list = list.filter(q => q.title.toLowerCase().includes(search.toLowerCase()));
+    if (moduleFilter !== 'all') list = list.filter(q => q.moduleId === moduleFilter);
+    if (sortOrder === 'az') list.sort((a, b) => a.title.localeCompare(b.title));
+    if (sortOrder === 'za') list.sort((a, b) => b.title.localeCompare(a.title));
+    if (sortOrder === 'date-new') list.sort((a, b) => (b.dueAt ?? '').localeCompare(a.dueAt ?? ''));
+    if (sortOrder === 'date-old') list.sort((a, b) => (a.dueAt ?? '').localeCompare(b.dueAt ?? ''));
+    return list;
+  }, [quizzes, search, moduleFilter, sortOrder]);
 
 
   // ── Quiz handlers ─────────────────────────────────────────────────────────
@@ -302,102 +311,119 @@ export function QuestionBank() {
       {/* Page title + actions */}
       <div className="flex items-center gap-3 mb-6">
         <h1 className="text-2xl font-bold text-neutral-900 mr-auto">Quiz Management</h1>
-        <div className="relative w-72">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
-          <input
-            type="search" value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Search for Quiz"
-            className="h-9 w-full rounded-lg border border-neutral-300 pl-9 pr-3 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand-navy focus:border-brand-navy"
-          />
-        </div>
         <Button onClick={() => navigate('/admin/quizzes/new')}><Plus size={15} /> Quiz</Button>
       </div>
 
-      {/* Assignment Quizzes section */}
-      <div className="border border-neutral-200 rounded-xl overflow-hidden bg-white">
-        <button
-          onClick={() => setSectionOpen(v => !v)}
-          className="w-full flex items-center gap-2 px-4 py-3 bg-neutral-50 hover:bg-neutral-100 transition-colors text-left border-b border-neutral-200"
-        >
-          {sectionOpen ? <ChevronDown size={15} className="text-neutral-600" /> : <ChevronRight size={15} className="text-neutral-600" />}
-          <span className="text-sm font-semibold text-neutral-800">Assignment Quizzes</span>
-        </button>
+      {/* Filters */}
+      <Card className="mb-4">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+            <input
+              type="search" value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="Search for Quiz"
+              className="h-9 w-full rounded-lg border border-neutral-300 pl-9 pr-3 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand-navy focus:border-brand-navy"
+            />
+          </div>
+          <div className="relative">
+            <select
+              value={moduleFilter}
+              onChange={e => setModuleFilter(e.target.value)}
+              className="h-9 rounded-lg border border-neutral-300 pl-3 pr-8 text-sm text-neutral-700 bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-brand-navy"
+            >
+              <option value="all">All Modules</option>
+              {MODULES.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}
+            </select>
+            <ChevronDown size={15} className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-500" />
+          </div>
+          <div className="relative">
+            <select
+              value={sortOrder}
+              onChange={e => setSortOrder(e.target.value as typeof sortOrder)}
+              className="h-9 rounded-lg border border-neutral-300 pl-3 pr-8 text-sm text-neutral-700 bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-brand-navy"
+            >
+              <option value="default">Sort: Default</option>
+              <option value="az">Sort: A → Z</option>
+              <option value="za">Sort: Z → A</option>
+              <option value="date-new">Sort: Due Newest</option>
+              <option value="date-old">Sort: Due Oldest</option>
+            </select>
+            <ChevronDown size={15} className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-500" />
+          </div>
+        </div>
+      </Card>
 
-        {sectionOpen && (
-          <div>
-            {filtered.length === 0 && (
-              <p className="py-10 text-center text-sm text-neutral-400">No quizzes match your search.</p>
-            )}
+      {/* Quiz list */}
+      <div className="flex flex-col gap-3">
+        {filtered.length === 0 && (
+          <p className="py-10 text-center text-sm text-neutral-400">No quizzes match your search.</p>
+        )}
 
-            {filtered.map(quiz => {
-              const mod = MODULES.find(m => m.id === quiz.moduleId);
-              const kebabOpen = activeKebab === quiz.id;
-              const isExpanded = expandedQuizId === quiz.id;
-              const questions = questionsByQuiz[quiz.id] ?? [];
+        {filtered.map(quiz => {
+          const mod = MODULES.find(m => m.id === quiz.moduleId);
+          const kebabOpen = activeKebab === quiz.id;
+          const isExpanded = expandedQuizId === quiz.id;
+          const questions = questionsByQuiz[quiz.id] ?? [];
 
-              return (
-                <div key={quiz.id} className="border-b border-neutral-100 last:border-b-0">
-                  {/* Quiz row */}
-                  <div
-                    className="relative flex items-center gap-4 pl-1 pr-5 py-4 hover:bg-neutral-50 transition-colors cursor-pointer group"
-                    onClick={() => setExpandedQuizId(isExpanded ? null : quiz.id)}
+          return (
+            <Card key={quiz.id} padding="none">
+              {/* Quiz row */}
+              <div
+                className="relative flex items-center gap-4 pl-1 pr-4 py-4 hover:bg-neutral-50 transition-colors cursor-pointer group rounded-xl"
+                onClick={() => setExpandedQuizId(isExpanded ? null : quiz.id)}
+              >
+               
+                <div className="flex-1 min-w-0 pl-4">
+                  <p className="text-sm font-semibold text-neutral-900">{quiz.title}</p>
+                  <div className="flex flex-wrap items-center gap-x-3 mt-0.5 text-xs text-neutral-500">
+                    <span className={quiz.status === 'unavailable' ? 'font-medium text-neutral-700' : ''}>
+                      {statusLine(quiz)}
+                    </span>
+                    {quiz.dueAt && <span>Due {quiz.dueAt}</span>}
+                    <span>{quiz.totalPoints} pts</span>
+                    <span>{questions.length} Question{questions.length !== 1 ? 's' : ''}</span>
+                    {mod && <span className="text-neutral-400 hidden sm:inline">· {mod.title}</span>}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
+                  {/* Edit button */}
+                  <button
+                    onClick={() => navigate(`/admin/quizzes/${quiz.id}/edit`)}
+                    className="flex items-center gap-1.5 px-3 h-7 rounded-lg text-xs font-semibold bg-brand-navy text-white hover:bg-brand-navy/90 transition-colors"
+                    title="Edit quiz"
                   >
-                    <div className="w-1 self-stretch bg-brand-mint rounded-sm flex-shrink-0" />
-                    <Rocket size={17} className="text-brand-navy flex-shrink-0 ml-1" strokeWidth={1.75} />
+                    <Pen size={12} /> Edit
+                  </button>
 
-                    <div className="flex-1 min-w-0">
-                      <button
-                        onClick={e => { e.stopPropagation(); navigate(`/admin/quizzes/${quiz.id}/edit`); }}
-                        className="text-sm font-semibold text-neutral-900 hover:text-brand-navy transition-colors text-left"
-                      >
-                        {quiz.title}
-                      </button>
-                      <div className="flex flex-wrap items-center gap-x-3 mt-0.5 text-xs text-neutral-500">
-                        <span className={quiz.status === 'unavailable' ? 'font-medium text-neutral-700' : ''}>
-                          {statusLine(quiz)}
-                        </span>
-                        {quiz.dueAt && <span>Due {quiz.dueAt}</span>}
-                        <span>{quiz.totalPoints} pts</span>
-                        <span>{questions.length} Question{questions.length !== 1 ? 's' : ''}</span>
-                        {mod && <span className="text-neutral-400 hidden sm:inline">· {mod.title}</span>}
+                  {/* Kebab */}
+                  <div className="relative z-20">
+                    <button
+                      onClick={() => setActiveKebab(kebabOpen ? null : quiz.id)}
+                      className="w-8 h-8 rounded-lg hover:bg-neutral-100 flex items-center justify-center text-neutral-400 hover:text-neutral-600 transition-colors"
+                    >
+                      <MoreVertical size={15} />
+                    </button>
+                    {kebabOpen && (
+                      <div className="absolute right-0 top-9 bg-white rounded-xl shadow-lg border border-neutral-200 py-1 w-44">
+                        <button onClick={() => handleDuplicateQuiz(quiz)} className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors">
+                          <Copy size={13} /> Duplicate
+                        </button>
+                        <div className="border-t border-neutral-100 my-1" />
+                        <button onClick={() => { setDeleteConfirmId(quiz.id); setActiveKebab(null); }} className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors">
+                          <Trash2 size={13} /> Delete Quiz
+                        </button>
                       </div>
-                    </div>
-
-                    {/* Completed indicator */}
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${quiz.completed ? 'bg-brand-navy/75' : 'border-2 border-neutral-200'}`}>
-                      {quiz.completed && <Check size={12} className="text-white" strokeWidth={3} />}
-                    </div>
-
-                    {/* Expand chevron */}
-                    <ChevronDown size={15} className={`text-neutral-400 transition-transform flex-shrink-0 ${isExpanded ? '' : '-rotate-90'}`} />
-
-                    {/* Kebab */}
-                    <div className="relative z-20 flex-shrink-0" onClick={e => e.stopPropagation()}>
-                      <button
-                        onClick={() => setActiveKebab(kebabOpen ? null : quiz.id)}
-                        className="w-8 h-8 rounded-lg hover:bg-neutral-100 flex items-center justify-center text-neutral-400 hover:text-neutral-600 transition-colors"
-                      >
-                        <MoreVertical size={15} />
-                      </button>
-                      {kebabOpen && (
-                        <div className="absolute right-0 top-9 bg-white rounded-xl shadow-lg border border-neutral-200 py-1 w-44">
-                          <button onClick={() => { setActiveKebab(null); navigate(`/admin/quizzes/${quiz.id}/edit`); }} className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors">
-                            <Edit2 size={13} /> Edit Quiz Settings
-                          </button>
-                          <button onClick={() => handleDuplicateQuiz(quiz)} className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 transition-colors">
-                            <Copy size={13} /> Duplicate
-                          </button>
-                          <div className="border-t border-neutral-100 my-1" />
-                          <button onClick={() => { setDeleteConfirmId(quiz.id); setActiveKebab(null); }} className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors">
-                            <Trash2 size={13} /> Delete Quiz
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                    )}
                   </div>
 
-                  {/* Expanded questions view */}
-                  {isExpanded && (
+                  {/* Expand chevron */}
+                  <ChevronDown size={15} className={`text-neutral-400 transition-transform flex-shrink-0 ${isExpanded ? '' : '-rotate-90'}`} />
+                </div>
+              </div>
+
+              {/* Expanded questions view */}
+              {isExpanded && (
                     <div className="bg-neutral-50 border-t border-neutral-100 px-6 py-4 flex flex-col gap-3">
                       {questions.length === 0 && (
                         <p className="text-sm text-neutral-400 py-2 text-center">No questions yet. Add one below.</p>
@@ -498,11 +524,9 @@ export function QuestionBank() {
                       </button>
                     </div>
                   )}
-                </div>
+                </Card>
               );
             })}
-          </div>
-        )}
       </div>
 
       {/* ── Modals ─────────────────────────────────────────────────────────── */}

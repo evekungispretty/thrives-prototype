@@ -84,7 +84,7 @@ export function ContentManagement() {
     const count = selectedIds.size;
     selectedIds.forEach(id => moduleStore.delete(id));
     setRefreshKey(k => k + 1);
-    show(`${count} module${count > 1 ? 's' : ''} deleted.`);
+    show(`${count} module${count > 1 ? 's' : ''} deleted.`, { variant: 'delete' });
     setSelectedIds(new Set());
   };
 
@@ -157,31 +157,36 @@ export function ContentManagement() {
             : <Square size={16} />}
         </button>
 
-        {/* Filter pills */}
-        <div className="flex items-center gap-1 bg-neutral-100 rounded-lg p-1">
-          {(['all', 'published', 'draft', 'archived'] as FilterStatus[]).map(f => (
-            <button
-              key={f}
-              onClick={() => { setFilterStatus(f); setSelectedIds(new Set()); }}
-              className={`px-3 py-1 rounded-md text-xs font-medium capitalize transition-colors ${filterStatus === f ? 'bg-white text-neutral-900 shadow-sm' : 'text-neutral-500 hover:text-neutral-700'}`}
-            >
-              {f}
-            </button>
-          ))}
+        {/* Filter */}
+        <div className="relative">
+          <select
+            value={filterStatus}
+            onChange={e => { setFilterStatus(e.target.value as FilterStatus); setSelectedIds(new Set()); }}
+            className="h-9 rounded-lg border border-neutral-300 pl-3 pr-8 text-sm text-neutral-700 bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-brand-navy"
+          >
+            <option value="all">All Statuses</option>
+            <option value="published">Published</option>
+            <option value="draft">Draft</option>
+            <option value="archived">Archived</option>
+          </select>
+          <ChevronDown size={15} className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-500" />
         </div>
 
         {/* Sort */}
-        <select
-          value={sortOrder}
-          onChange={e => setSortOrder(e.target.value as SortOrder)}
-          className="h-8 px-2 rounded-lg border border-neutral-200 text-xs text-neutral-600 bg-white focus:outline-none focus:ring-2 focus:ring-brand-navy/20"
-        >
-          <option value="default">Sort: Default</option>
-          <option value="az">Sort: A → Z</option>
-          <option value="za">Sort: Z → A</option>
-          <option value="date-new">Sort: Newest first</option>
-          <option value="date-old">Sort: Oldest first</option>
-        </select>
+        <div className="relative">
+          <select
+            value={sortOrder}
+            onChange={e => setSortOrder(e.target.value as SortOrder)}
+            className="h-9 rounded-lg border border-neutral-300 pl-3 pr-8 text-sm text-neutral-700 bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-brand-navy"
+          >
+            <option value="default">Sort: Default</option>
+            <option value="az">Sort: A → Z</option>
+            <option value="za">Sort: Z → A</option>
+            <option value="date-new">Sort: Newest first</option>
+            <option value="date-old">Sort: Oldest first</option>
+          </select>
+          <ChevronDown size={15} className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-500" />
+        </div>
       </div>
 
       {/* Module list */}
