@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { ChevronDown, ChevronRight, Plus, Edit2, Eye, EyeOff, GripVertical, BookOpen, Clock, FileQuestion, ImageIcon } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, Edit2, Eye, EyeOff, GripVertical, BookOpen, Clock, FileQuestion, ImageIcon, CheckSquare, Square } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { AdminShell } from '../../components/layout/AdminShell';
 import { Card } from '../../components/ui/Card';
@@ -9,6 +9,9 @@ import { TopicBadge } from '../../components/ui/Badge';
 import { moduleStore } from '../../stores/moduleStore';
 import { useToast } from '../../hooks/useToast';
 
+type FilterStatus = 'all' | 'published' | 'draft';
+type SortOrder = 'default' | 'az' | 'za';
+
 export function ContentManagement() {
   const [, navigate] = useLocation();
   const [refreshKey, setRefreshKey] = useState(0);
@@ -17,7 +20,46 @@ export function ContentManagement() {
   const [publishState, setPublishState] = useState<Record<string, 'published' | 'draft'>>(
     () => Object.fromEntries(moduleStore.getAll().map(m => [m.id, m.publishState]))
   );
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('default');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const { toast, show, dismiss } = useToast();
+
+  const visibleModules = useMemo(() => {
+    let list = [...modules];
+    if (filterStatus !== 'all') list = list.filter(m => (publishState[m.id] ?? m.publishState) === filterStatus);
+    if (sortOrder === 'az') list.sort((a, b) => a.title.localeCompare(b.title));
+    if (sortOrder === 'za') list.sort((a, b) => b.title.localeCompare(a.title));
+    return list;
+  }, [modules, filterStatus, sortOrder, publishState]);
+
+  const allSelected = visibleModules.length > 0 && visibleModules.every(m => selectedIds.has(m.id));
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(visibleModules.map(m => m.id)));
+    }
+  };
+
+  const bulkSetPublish = (state: 'published' | 'draft') => {
+    setPublishState(prev => {
+      const next = { ...prev };
+      selectedIds.forEach(id => { next[id] = state; });
+      return next;
+    });
+    show(`${selectedIds.size} module${selectedIds.size > 1 ? 's' : ''} ${state === 'published' ? 'published' : 'set to draft'}.`);
+    setSelectedIds(new Set());
+  };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -74,24 +116,66 @@ export function ContentManagement() {
         </Button>
       </div>
 
-      {/* Summary row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-        {[
-          { label: 'Total Modules', value: modules.length },
-          { label: 'Published', value: Object.values(publishState).filter(s => s === 'published').length, color: 'text-brand-navy' },
-          { label: 'Draft', value: Object.values(publishState).filter(s => s === 'draft').length, color: 'text-brand-navy' },
-          { label: 'Total Lessons', value: modules.reduce((s, m) => s + m.lessons.length, 0) },
-        ].map(s => (
-          <Card key={s.label}>
-            <p className="text-xs text-neutral-500 font-medium">{s.label}</p>
-            <p className={`text-2xl font-bold mt-1 ${s.color ?? 'text-neutral-900'}`}>{s.value}</p>
-          </Card>
-        ))}
+      {/* Toolbar */}
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        {/* Select all */}
+        <button
+          onClick={toggleSelectAll}
+          className="flex-shrink-0 text-neutral-300 hover:text-brand-navy transition-colors"
+          title={allSelected ? 'Deselect all' : 'Select all'}
+        >
+          {allSelected
+            ? <CheckSquare size={16} className="text-brand-navy" />
+            : <Square size={16} />}
+        </button>
+
+        {/* Filter pills */}
+        <div className="flex items-center gap-1 bg-neutral-100 rounded-lg p-1">
+          {(['all', 'published', 'draft'] as FilterStatus[]).map(f => (
+            <button
+              key={f}
+              onClick={() => { setFilterStatus(f); setSelectedIds(new Set()); }}
+              className={`px-3 py-1 rounded-md text-xs font-medium capitalize transition-colors ${filterStatus === f ? 'bg-white text-neutral-900 shadow-sm' : 'text-neutral-500 hover:text-neutral-700'}`}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+
+        {/* Sort */}
+        <select
+          value={sortOrder}
+          onChange={e => setSortOrder(e.target.value as SortOrder)}
+          className="h-8 px-2 rounded-lg border border-neutral-200 text-xs text-neutral-600 bg-white focus:outline-none focus:ring-2 focus:ring-brand-navy/20"
+        >
+          <option value="default">Sort: Default</option>
+          <option value="az">Sort: A → Z</option>
+          <option value="za">Sort: Z → A</option>
+        </select>
+
+        {/* Bulk actions — shown when something is selected */}
+        {selectedIds.size > 0 && (
+          <div className="flex items-center gap-2 ml-auto">
+            <span className="text-xs text-neutral-500">{selectedIds.size} selected</span>
+            <button
+              onClick={() => bulkSetPublish('published')}
+              className="flex items-center gap-1.5 px-3 h-8 rounded-lg text-xs font-medium bg-brand-navy text-white hover:bg-brand-navy/90 transition-colors"
+            >
+              <Eye size={12} /> Publish
+            </button>
+            <button
+              onClick={() => bulkSetPublish('draft')}
+              className="flex items-center gap-1.5 px-3 h-8 rounded-lg text-xs font-medium border border-neutral-200 text-neutral-600 hover:bg-neutral-50 transition-colors"
+            >
+              <EyeOff size={12} /> Set Draft
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Module list */}
       <div className="flex flex-col gap-3">
-        {modules.map((mod, modIdx) => {
+        {visibleModules.map((mod, modIdx) => {
           const expanded = expandedIds.has(mod.id);
           const state = publishState[mod.id] ?? mod.publishState;
           const isPublished = state === 'published';
@@ -103,6 +187,14 @@ export function ContentManagement() {
                 className="flex items-center gap-3 p-4 cursor-pointer hover:bg-neutral-50 transition-colors group"
                 onClick={() => toggle(mod.id)}
               >
+                <button
+                  onClick={e => { e.stopPropagation(); toggleSelect(mod.id); }}
+                  className="flex-shrink-0 text-neutral-300 hover:text-brand-navy transition-colors"
+                >
+                  {selectedIds.has(mod.id)
+                    ? <CheckSquare size={16} className="text-brand-navy" />
+                    : <Square size={16} />}
+                </button>
                 <GripVertical size={16} className="text-neutral-300 flex-shrink-0" />
                 {mod.thumbnail
                   ? <img src={mod.thumbnail} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-neutral-200" />
@@ -139,10 +231,10 @@ export function ContentManagement() {
                   </button>
                   <button
                     onClick={e => { e.stopPropagation(); navigate(`/admin/modules/${mod.id}/edit`); }}
-                    className="w-7 h-7 rounded-lg hover:bg-neutral-100 flex items-center justify-center text-neutral-400 hover:text-neutral-700 transition-colors"
+                    className="flex items-center gap-1.5 px-3 h-7 rounded-lg text-xs font-semibold bg-brand-navy text-white hover:bg-brand-navy/90 transition-colors"
                     title="Edit module"
                   >
-                    <Edit2 size={13} />
+                    <Edit2 size={12} /> Edit
                   </button>
                   {expanded
                     ? <ChevronDown size={16} className="text-neutral-400" />

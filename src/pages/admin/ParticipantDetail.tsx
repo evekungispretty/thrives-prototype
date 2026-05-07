@@ -203,6 +203,25 @@ export function ParticipantDetail() {
             </div>
           </Card>
 
+          {/* Module score table */}
+          <Card>
+            <h3 className="text-sm font-semibold text-neutral-800 mb-3">Quiz Scores</h3>
+            <div className="flex flex-col gap-2">
+              {MODULES.filter(m => m.publishState === 'published').map(mod => {
+                const prog = user.progress.find(p => p.moduleId === mod.id);
+                if (prog?.quizScore === undefined) return null;
+                return (
+                  <div key={mod.id} className="flex items-center justify-between text-sm">
+                    <span className="text-neutral-600 truncate flex-1 mr-2 text-xs">{mod.title}</span>
+                    <span className="font-semibold text-xs flex-shrink-0 text-brand-navy">
+                      {prog.quizScore}/{prog.quizMaxScore}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+
           {/* Question-level response view (Module 1) */}
           <Card>
             <h2 className="text-sm font-semibold text-neutral-800 mb-1">Quiz Responses — Feeding Your Baby</h2>
@@ -336,24 +355,6 @@ export function ParticipantDetail() {
             </button>
           </Card>
 
-          {/* Module score table */}
-          <Card>
-            <h3 className="text-sm font-semibold text-neutral-800 mb-3">Quiz Scores</h3>
-            <div className="flex flex-col gap-2">
-              {MODULES.filter(m => m.publishState === 'published').map(mod => {
-                const prog = user.progress.find(p => p.moduleId === mod.id);
-                if (prog?.quizScore === undefined) return null;
-                return (
-                  <div key={mod.id} className="flex items-center justify-between text-sm">
-                    <span className="text-neutral-600 truncate flex-1 mr-2 text-xs">{mod.title.split(' ').slice(0,3).join(' ')}</span>
-                    <span className="font-semibold text-xs flex-shrink-0 text-brand-navy">
-                      {prog.quizScore}/{prog.quizMaxScore}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </Card>
         </div>
       </div>
 
