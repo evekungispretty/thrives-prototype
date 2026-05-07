@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { ChevronDown, ChevronRight, Plus, Edit2, Eye, EyeOff, GripVertical, BookOpen, Clock, FileQuestion, ImageIcon, CheckSquare, Square } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, Edit2, Eye, EyeOff, GripVertical, BookOpen, Clock, FileQuestion, ImageIcon, CheckSquare, Square, Copy, Trash2, Archive, X } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { AdminShell } from '../../components/layout/AdminShell';
 import { Card } from '../../components/ui/Card';
@@ -9,7 +9,8 @@ import { TopicBadge } from '../../components/ui/Badge';
 import { moduleStore } from '../../stores/moduleStore';
 import { useToast } from '../../hooks/useToast';
 
-type FilterStatus = 'all' | 'published' | 'draft';
+type FilterStatus = 'all' | 'published' | 'draft' | 'archived';
+type ModuleStatus = 'published' | 'draft' | 'archived';
 type SortOrder = 'default' | 'az' | 'za' | 'date-new' | 'date-old';
 
 export function ContentManagement() {
@@ -17,8 +18,8 @@ export function ContentManagement() {
   const [refreshKey, setRefreshKey] = useState(0);
   const modules = useMemo(() => moduleStore.getAll(), [refreshKey]);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set(['mod-1']));
-  const [publishState, setPublishState] = useState<Record<string, 'published' | 'draft'>>(
-    () => Object.fromEntries(moduleStore.getAll().map(m => [m.id, m.publishState]))
+  const [publishState, setPublishState] = useState<Record<string, ModuleStatus>>(
+    () => Object.fromEntries(moduleStore.getAll().map(m => [m.id, m.publishState as ModuleStatus]))
   );
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
   const [sortOrder, setSortOrder] = useState<SortOrder>('default');
@@ -27,7 +28,7 @@ export function ContentManagement() {
 
   const visibleModules = useMemo(() => {
     let list = [...modules];
-    if (filterStatus !== 'all') list = list.filter(m => (publishState[m.id] ?? m.publishState) === filterStatus);
+    if (filterStatus !== 'all') list = list.filter(m => (publishState[m.id] ?? m.publishState as ModuleStatus) === filterStatus);
     if (sortOrder === 'az') list.sort((a, b) => a.title.localeCompare(b.title));
     if (sortOrder === 'za') list.sort((a, b) => b.title.localeCompare(a.title));
     if (sortOrder === 'date-new') list.sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''));
@@ -53,13 +54,37 @@ export function ContentManagement() {
     }
   };
 
-  const bulkSetPublish = (state: 'published' | 'draft') => {
+  const bulkSetStatus = (status: ModuleStatus) => {
+    const count = selectedIds.size;
     setPublishState(prev => {
       const next = { ...prev };
-      selectedIds.forEach(id => { next[id] = state; });
+      selectedIds.forEach(id => { next[id] = status; });
       return next;
     });
-    show(`${selectedIds.size} module${selectedIds.size > 1 ? 's' : ''} ${state === 'published' ? 'published' : 'set to draft'}.`);
+    const label = status === 'published' ? 'published' : status === 'draft' ? 'set to draft' : 'archived';
+    show(`${count} module${count > 1 ? 's' : ''} ${label}.`);
+    setSelectedIds(new Set());
+  };
+
+  const bulkDuplicate = () => {
+    const count = selectedIds.size;
+    selectedIds.forEach(id => {
+      const mod = moduleStore.getById(id);
+      if (!mod) return;
+      const newId = `mod-copy-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+      moduleStore.add({ ...mod, id: newId, title: `${mod.title} (Copy)` });
+      setPublishState(prev => ({ ...prev, [newId]: 'draft' }));
+    });
+    setRefreshKey(k => k + 1);
+    show(`${count} module${count > 1 ? 's' : ''} duplicated.`);
+    setSelectedIds(new Set());
+  };
+
+  const bulkDelete = () => {
+    const count = selectedIds.size;
+    selectedIds.forEach(id => moduleStore.delete(id));
+    setRefreshKey(k => k + 1);
+    show(`${count} module${count > 1 ? 's' : ''} deleted.`);
     setSelectedIds(new Set());
   };
 
@@ -134,7 +159,7 @@ export function ContentManagement() {
 
         {/* Filter pills */}
         <div className="flex items-center gap-1 bg-neutral-100 rounded-lg p-1">
-          {(['all', 'published', 'draft'] as FilterStatus[]).map(f => (
+          {(['all', 'published', 'draft', 'archived'] as FilterStatus[]).map(f => (
             <button
               key={f}
               onClick={() => { setFilterStatus(f); setSelectedIds(new Set()); }}
@@ -157,33 +182,15 @@ export function ContentManagement() {
           <option value="date-new">Sort: Newest first</option>
           <option value="date-old">Sort: Oldest first</option>
         </select>
-
-        {/* Bulk actions — shown when something is selected */}
-        {selectedIds.size > 0 && (
-          <div className="flex items-center gap-2 ml-auto">
-            <span className="text-xs text-neutral-500">{selectedIds.size} selected</span>
-            <button
-              onClick={() => bulkSetPublish('published')}
-              className="flex items-center gap-1.5 px-3 h-8 rounded-lg text-xs font-medium bg-brand-navy text-white hover:bg-brand-navy/90 transition-colors"
-            >
-              <Eye size={12} /> Publish
-            </button>
-            <button
-              onClick={() => bulkSetPublish('draft')}
-              className="flex items-center gap-1.5 px-3 h-8 rounded-lg text-xs font-medium border border-neutral-200 text-neutral-600 hover:bg-neutral-50 transition-colors"
-            >
-              <EyeOff size={12} /> Set Draft
-            </button>
-          </div>
-        )}
       </div>
 
       {/* Module list */}
       <div className="flex flex-col gap-3">
-        {visibleModules.map((mod, modIdx) => {
+        {visibleModules.map((mod) => {
           const expanded = expandedIds.has(mod.id);
-          const state = publishState[mod.id] ?? mod.publishState;
+          const state: ModuleStatus = (publishState[mod.id] ?? mod.publishState) as ModuleStatus;
           const isPublished = state === 'published';
+          const isArchived = state === 'archived';
 
           return (
             <Card key={mod.id} padding="none">
@@ -212,8 +219,8 @@ export function ContentManagement() {
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-sm font-semibold text-neutral-800">{mod.title}</p>
                     <TopicBadge tag={mod.tag} />
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${isPublished ? 'bg-brand-mint-pale text-brand-navy' : 'bg-brand-yellow-pale text-brand-navy'}`}>
-                      {isPublished ? 'Published' : 'Draft'}
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${isPublished ? 'bg-brand-mint-pale text-brand-navy' : isArchived ? 'bg-neutral-100 text-neutral-500' : 'bg-brand-yellow-pale text-brand-navy'}`}>
+                      {isPublished ? 'Published' : isArchived ? 'Archived' : 'Draft'}
                     </span>
                   </div>
                   <div className="flex items-center gap-4 mt-1 text-xs text-neutral-400">
@@ -280,6 +287,68 @@ export function ContentManagement() {
           );
         })}
       </div>
+
+      {/* Floating bulk action bar */}
+      {selectedIds.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1 bg-white border border-neutral-200 rounded-2xl shadow-xl px-3 py-2">
+          <div className="flex items-center gap-2 pr-3 border-r border-neutral-200 mr-1">
+            <span className="w-6 h-6 rounded-full bg-brand-navy text-white text-xs font-bold flex items-center justify-center">
+              {selectedIds.size}
+            </span>
+            <span className="text-sm font-medium text-neutral-700 whitespace-nowrap">
+              {selectedIds.size === 1 ? 'module' : 'modules'} selected
+            </span>
+          </div>
+          <button
+            onClick={bulkDuplicate}
+            className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-neutral-600 hover:bg-neutral-100 transition-colors"
+            title="Duplicate"
+          >
+            <Copy size={16} />
+            <span className="text-[10px] font-medium">Duplicate</span>
+          </button>
+          <button
+            onClick={() => bulkSetStatus('published')}
+            className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-neutral-600 hover:bg-neutral-100 transition-colors"
+            title="Publish"
+          >
+            <Eye size={16} />
+            <span className="text-[10px] font-medium">Publish</span>
+          </button>
+          <button
+            onClick={() => bulkSetStatus('draft')}
+            className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-neutral-600 hover:bg-neutral-100 transition-colors"
+            title="Unpublish"
+          >
+            <EyeOff size={16} />
+            <span className="text-[10px] font-medium">Unpublish</span>
+          </button>
+          <button
+            onClick={() => bulkSetStatus('archived')}
+            className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-neutral-600 hover:bg-neutral-100 transition-colors"
+            title="Archive"
+          >
+            <Archive size={16} />
+            <span className="text-[10px] font-medium">Archive</span>
+          </button>
+          <button
+            onClick={bulkDelete}
+            className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-red-500 hover:bg-red-50 transition-colors"
+            title="Delete"
+          >
+            <Trash2 size={16} />
+            <span className="text-[10px] font-medium">Delete</span>
+          </button>
+          <div className="w-px h-6 bg-neutral-200 mx-1" />
+          <button
+            onClick={() => setSelectedIds(new Set())}
+            className="p-1.5 rounded-xl text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 transition-colors"
+            title="Clear selection"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
     </AdminShell>
   );
 }
